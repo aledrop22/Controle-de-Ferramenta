@@ -9,7 +9,9 @@ const setoresOperadores = {
   "Manutenção": ["Nilson", "Marcos", "Renato"],
   "Estoque": ["Elias", "Lucas", "Victor", "Rafael"],
   "Expedição": ["Karina", "Deise", "Frank", "Giulia", "Adriano", "Ismael"]
-}
+} as const
+
+type Setor = keyof typeof setoresOperadores
 
 const maquinasLista = ["GL 01", "GL 02", "CNC 01", "CNC 02", "FRESA 01", "FRESA 02", "TORNO 01", "TORNO 02", "TORNO 03", "PRODUÇÃO", "EXPEDIÇÃO", "ESTOQUE", "MANUTENÇÃO", "PCP"]
 
@@ -21,10 +23,14 @@ const estoque = {
   'Paquímetro': ['Modelo Digital']
 }
 
-type Registro = {
-  id: string
+type Ferramenta = {
   instrumento: string
   especificacao: string
+}
+
+type Registro = {
+  id: string
+  ferramentas: Ferramenta[]
   operador: string
   setor: string
   maquina: string
@@ -39,7 +45,7 @@ export default function Home() {
   const [tela, setTela] = useState<'dashboard' | 'retirada'>('dashboard')
   const [registros, setRegistros] = useState<Registro[]>([])
   const [operadorLogado, setOperadorLogado] = useState<string | null>(null)
-  const [setorLogado, setSetorLogado] = useState<string | null>(null)
+  const [setorLogado, setSetorLogado] = useState<Setor | null>(null)
   const [maquinaSelecionada, setMaquinaSelecionada] = useState('')
   const [ferramentasSelecionadas, setFerramentasSelecionadas] = useState<string[]>([])
   const [outraFerramenta, setOutraFerramenta] = useState('')
@@ -51,23 +57,25 @@ export default function Home() {
     }
 
     const agora = new Date()
-    ferramentasSelecionadas.forEach(ferramenta => {
-      const [categoria, detalhe] = ferramenta.split(' - ')
-      const novoRegistro: Registro = {
-        id: agora.getTime().toString() + Math.random().toString(36).substr(2, 9),
-        instrumento: categoria,
-        especificacao: detalhe,
-        operador: operadorLogado!,
-        setor: setorLogado!,
-        maquina: maquinaSelecionada,
-        dataRetirada: agora.toLocaleDateString('pt-BR'),
-        horaRetirada: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        dataRetorno: '',
-        horaRetorno: '',
-        status: 'Em Uso'
-      }
-      setRegistros(prev => [...prev, novoRegistro])
-    })
+    const novoRegistro: Registro = {
+      id: agora.getTime().toString() + Math.random().toString(36).substr(2, 9),
+      ferramentas: ferramentasSelecionadas.map(ferramenta => {
+        const [categoria, ...detalhes] = ferramenta.split(' - ')
+        return {
+          instrumento: categoria,
+          especificacao: detalhes.join(' - ')
+        }
+      }),
+      operador: operadorLogado!,
+      setor: setorLogado!,
+      maquina: maquinaSelecionada,
+      dataRetirada: agora.toLocaleDateString('pt-BR'),
+      horaRetirada: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      dataRetorno: '',
+      horaRetorno: '',
+      status: 'Em Uso'
+    }
+    setRegistros(prev => [...prev, novoRegistro])
 
     setFerramentasSelecionadas([])
     setMaquinaSelecionada('')
@@ -78,21 +86,54 @@ export default function Home() {
 
   const handleDevolucao = (id: string) => {
     const agora = new Date()
-    setRegistros(prev => prev.map(reg => 
-      reg.id === id 
-        ? { 
-            ...reg, 
-            dataRetorno: agora.toLocaleDateString('pt-BR'),
-            horaRetorno: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: 'Devolvido' as const 
-          }
+    setRegistros(prev => prev.map(reg =>
+      reg.id === id
+        ? {
+          ...reg,
+          dataRetorno: agora.toLocaleDateString('pt-BR'),
+          horaRetorno: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'Devolvido' as const
+        }
         : reg
     ))
   }
 
+  const handleDevolucaoIndividual = (id: string, ferramentaIndex: number) => {
+    const agora = new Date()
+    setRegistros(prev => prev.flatMap(reg => {
+      if (reg.id !== id) return reg
+
+      const ferramentaDevolvida = reg.ferramentas[ferramentaIndex]
+      const ferramentasRestantes = reg.ferramentas.filter((_, index) => index !== ferramentaIndex)
+      const registroDevolvido: Registro = {
+        id: agora.getTime().toString() + Math.random().toString(36).substr(2, 9),
+        ferramentas: [ferramentaDevolvida],
+        operador: reg.operador,
+        setor: reg.setor,
+        maquina: reg.maquina,
+        dataRetirada: reg.dataRetirada,
+        horaRetirada: reg.horaRetirada,
+        dataRetorno: agora.toLocaleDateString('pt-BR'),
+        horaRetorno: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        status: 'Devolvido'
+      }
+
+      if (ferramentasRestantes.length === 0) {
+        return [{ ...registroDevolvido }]
+      }
+
+      const registroEmUso: Registro = {
+        ...reg,
+        ferramentas: ferramentasRestantes
+      }
+
+      return [registroEmUso, registroDevolvido]
+    }))
+  }
+
   const toggleFerramenta = (categoria: string, especificacao: string) => {
     const key = `${categoria} - ${especificacao}`
-    setFerramentasSelecionadas(prev => 
+    setFerramentasSelecionadas(prev =>
       prev.includes(key) ? prev.filter(f => f !== key) : [...prev, key]
     )
   }
@@ -110,13 +151,24 @@ export default function Home() {
   if (tela === 'dashboard') {
     const emUso = registros.filter(r => r.status === 'Em Uso')
     const devolvidos = registros.filter(r => r.status === 'Devolvido')
+    const devolvidosRows = devolvidos.flatMap(reg =>
+      reg.ferramentas.map((f, index) => ({
+        key: `${reg.id}-${index}`,
+        instrumento: f.instrumento,
+        especificacao: f.especificacao,
+        operador: reg.operador,
+        maquina: reg.maquina,
+        dataRetirada: `${reg.dataRetirada} ${reg.horaRetirada}`,
+        dataRetorno: `${reg.dataRetorno} ${reg.horaRetorno}`
+      }))
+    )
 
     return (
       <div className="min-h-screen bg-gray-100 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">📊 Painel de Ferramentas - Tempo Real</h1>
-            <button 
+            <button
               onClick={() => setTela('retirada')}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-blue-700"
             >
@@ -133,15 +185,35 @@ export default function Home() {
               ) : (
                 emUso.map(reg => (
                   <div key={reg.id} className="bg-white p-4 rounded-lg mb-3 shadow">
-                    <p className="font-bold">{reg.instrumento} ({reg.especificacao})</p>
-                    <p className="text-sm text-gray-600">👤 {reg.operador} ({reg.setor}) | 🏭 {reg.maquina}</p>
-                    <p className="text-sm text-gray-600">📅 Retirado: {reg.dataRetirada} às {reg.horaRetirada}</p>
-                    <button 
-                      onClick={() => handleDevolucao(reg.id)}
-                      className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                    >
-                      Devolver
-                    </button>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="font-bold">{reg.operador} ({reg.setor})</p>
+                        <p className="text-sm text-gray-600">🏭 {reg.maquina}</p>
+                      </div>
+                      <button
+                        onClick={() => handleDevolucao(reg.id)}
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                      >
+                        Devolver tudo
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {reg.ferramentas.map((f, index) => (
+                        <div key={`${f.instrumento}-${f.especificacao}-${index}`} className="p-3 bg-gray-50 rounded-lg flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold">{f.instrumento}</p>
+                            <p className="text-sm text-gray-600">{f.especificacao}</p>
+                          </div>
+                          <button
+                            onClick={() => handleDevolucaoIndividual(reg.id, index)}
+                            className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 ml-2"
+                          >
+                            Devolver
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-3">📅 Retirado: {reg.dataRetirada} às {reg.horaRetirada}</p>
                   </div>
                 ))
               )}
@@ -157,18 +229,22 @@ export default function Home() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-2 text-left">Instrumento</th>
+                        <th className="px-4 py-2 text-left">Especificação</th>
                         <th className="px-4 py-2 text-left">Operador</th>
-                        <th className="px-4 py-2 text-left">Retirada</th>
-                        <th className="px-4 py-2 text-left">Devolução</th>
+                        <th className="px-4 py-2 text-left">Máquina</th>
+                        <th className="px-4 py-2 text-left">Data/Hora - Retirada</th>
+                        <th className="px-4 py-2 text-left">Data/Hora - Devolução</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {devolvidos.map(reg => (
-                        <tr key={reg.id} className="border-t">
-                          <td className="px-4 py-2">{reg.instrumento} ({reg.especificacao})</td>
-                          <td className="px-4 py-2">{reg.operador}</td>
-                          <td className="px-4 py-2">{reg.dataRetirada} {reg.horaRetirada}</td>
-                          <td className="px-4 py-2">{reg.dataRetorno} {reg.horaRetorno}</td>
+                      {devolvidosRows.map(row => (
+                        <tr key={row.key} className="border-t text-sm">
+                          <td className="px-4 py-2 font-medium">{row.instrumento}</td>
+                          <td className="px-4 py-2">{row.especificacao}</td>
+                          <td className="px-4 py-2">{row.operador}</td>
+                          <td className="px-4 py-2">{row.maquina}</td>
+                          <td className="px-4 py-2">{row.dataRetirada}</td>
+                          <td className="px-4 py-2">{row.dataRetorno ? row.dataRetorno : 'Pendente'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -187,7 +263,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">🛠️ Nova Retirada</h1>
-          <button 
+          <button
             onClick={() => setTela('dashboard')}
             className="bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-700"
           >
@@ -199,9 +275,9 @@ export default function Home() {
         {!operadorLogado ? (
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">👤 Passo 1: Quem é você?</h2>
-            <select 
+            <select
               className="w-full p-3 border rounded-lg mb-4"
-              onChange={(e) => setSetorLogado(e.target.value)}
+              onChange={(e) => setSetorLogado(e.target.value as Setor)}
               value={setorLogado || ''}
             >
               <option value="">Selecione seu Setor...</option>
@@ -209,7 +285,7 @@ export default function Home() {
                 <option key={setor} value={setor}>{setor}</option>
               ))}
             </select>
-            
+
             {setorLogado && (
               <div>
                 <p className="mb-3">Operadores do setor: <strong>{setorLogado}</strong></p>
@@ -234,7 +310,7 @@ export default function Home() {
                 <p className="text-xl font-bold">Olá, {operadorLogado}!</p>
                 <p>Setor: <strong>{setorLogado}</strong></p>
               </div>
-              <button 
+              <button
                 onClick={() => { setOperadorLogado(null); setSetorLogado(null); }}
                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
               >
@@ -244,7 +320,7 @@ export default function Home() {
 
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-xl font-semibold mb-4">🏭 Passo 2: Onde você vai usar?</h2>
-              <select 
+              <select
                 className="w-full p-3 border rounded-lg"
                 value={maquinaSelecionada}
                 onChange={(e) => setMaquinaSelecionada(e.target.value)}
@@ -259,7 +335,7 @@ export default function Home() {
             {maquinaSelecionada && (
               <div className="bg-white p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">🔧 Passo 3: O que você vai retirar?</h2>
-                
+
                 {ferramentasSelecionadas.length > 0 && (
                   <div className="mb-4 p-3 bg-blue-50 rounded">
                     <p className="font-semibold mb-2">Ferramentas selecionadas:</p>
@@ -275,25 +351,23 @@ export default function Home() {
                       <h3 className="font-semibold mb-2">{categoria}</h3>
                       <div className="grid grid-cols-4 gap-2">
                         {itens.map(item => {
-                          const emUso = registros.some(r => 
-                            r.instrumento === categoria && 
-                            r.especificacao === item && 
-                            r.status === 'Em Uso'
+                          const emUso = registros.some(r =>
+                            r.status === 'Em Uso' &&
+                            r.ferramentas.some(f => f.instrumento === categoria && f.especificacao === item)
                           )
                           const selecionado = ferramentasSelecionadas.includes(`${categoria} - ${item}`)
-                          
+
                           return (
                             <button
                               key={item}
                               onClick={() => toggleFerramenta(categoria, item)}
                               disabled={emUso}
-                              className={`p-3 rounded border text-sm ${
-                                emUso 
-                                  ? 'bg-gray-300 cursor-not-allowed' 
-                                  : selecionado 
-                                    ? 'bg-green-500 text-white' 
-                                    : 'bg-white hover:bg-gray-50'
-                              }`}
+                              className={`p-3 rounded border text-sm ${emUso
+                                ? 'bg-gray-300 cursor-not-allowed'
+                                : selecionado
+                                  ? 'bg-green-500 text-white'
+                                  : 'bg-white hover:bg-gray-50'
+                                }`}
                             >
                               {item}
                               {selecionado && ' ✓'}
