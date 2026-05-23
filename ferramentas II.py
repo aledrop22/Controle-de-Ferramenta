@@ -138,16 +138,16 @@ if st.session_state.tela_atual == 'dashboard':
         if not df_devolvidos.empty:
             # Criar colunas combinadas de data/hora e ordenar por devolução mais recente
             df_devolvidos = df_devolvidos.copy()
-            df_devolvidos['Data/Hora - Retirada'] = df_devolvidos['Data_Retirada'] + ' às ' + df_devolvidos['Hora_Retirada']
-            df_devolvidos['Data/Hora - Devolução'] = df_devolvidos['Data_Retorno'] + ' às ' + df_devolvidos['Hora_Retorno']
+            df_devolvidos['Data/Horas - Retirada'] = df_devolvidos['Data_Retirada'] + ' às ' + df_devolvidos['Hora_Retirada']
+            df_devolvidos['Data/Horas-Devolução'] = df_devolvidos['Data_Retorno'] + ' às ' + df_devolvidos['Hora_Retorno']
             df_devolvidos['DataHoraDevolucaoOrdenacao'] = pd.to_datetime(
                 df_devolvidos['Data_Retorno'] + ' ' + df_devolvidos['Hora_Retorno'],
                 format='%d/%m/%Y %H:%M',
                 errors='coerce'
             )
             df_devolvidos = df_devolvidos.sort_values(by='DataHoraDevolucaoOrdenacao', ascending=False)
-            df_display = df_devolvidos[['Instrumento', 'Especificacao', 'Operador', 'Maquina', 'Data/Hora - Retirada', 'Data/Hora - Devolução']]
-            st.dataframe(df_display, hide_index=True, use_container_width=True)
+            df_display = df_devolvidos[['Instrumento', 'Especificacao', 'Operador', 'Maquina', 'Data/Horas - Retirada', 'Data/Horas-Devolução']]
+            st.dataframe(df_display.fillna(''), hide_index=True, use_container_width=True)
         else:
             st.info("Nenhuma devolução registrada ainda.")
 
