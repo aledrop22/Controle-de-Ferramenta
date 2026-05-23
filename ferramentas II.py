@@ -147,7 +147,7 @@ if st.session_state.tela_atual == 'dashboard':
             )
             df_devolvidos = df_devolvidos.sort_values(by='DataHoraDevolucaoOrdenacao', ascending=False)
             df_display = df_devolvidos[['Instrumento', 'Especificacao', 'Operador', 'Maquina', 'Data/Hora - Retirada', 'Data/Hora - Devolução']]
-            st.table(df_display)
+            st.dataframe(df_display, hide_index=True, use_container_width=True)
         else:
             st.info("Nenhuma devolução registrada ainda.")
 
