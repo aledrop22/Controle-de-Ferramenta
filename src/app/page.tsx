@@ -221,23 +221,27 @@ export default function Home() {
 
             <div className="bg-red-100 p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-red-800 mb-4">🔴 Histórico de Devoluções</h2>
-              {devolvidos.length === 0 ? (
-                <p className="text-gray-600">Nenhuma devolução registrada ainda.</p>
-              ) : (
-                <div className="bg-white rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left">Instrumento</th>
-                        <th className="px-4 py-2 text-left">Especificação</th>
-                        <th className="px-4 py-2 text-left">Operador</th>
-                        <th className="px-4 py-2 text-left">Máquina</th>
-                        <th className="px-4 py-2 text-left">Data/Hora - Retirada</th>
-                        <th className="px-4 py-2 text-left">Data/Hora - Devolução</th>
+              <div className="bg-white rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Instrumento</th>
+                      <th className="px-4 py-2 text-left">Especificação</th>
+                      <th className="px-4 py-2 text-left">Operador</th>
+                      <th className="px-4 py-2 text-left">Máquina</th>
+                      <th className="px-4 py-2 text-left">Data/Hora - Retirada</th>
+                      <th className="px-4 py-2 text-left">Data/Hora - Devolução</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {devolvidosRows.length === 0 ? (
+                      <tr className="border-t text-sm">
+                        <td className="px-4 py-8 text-center text-gray-600" colSpan={6}>
+                          Nenhuma devolução registrada ainda.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {devolvidosRows.map(row => (
+                    ) : (
+                      devolvidosRows.map(row => (
                         <tr key={row.key} className="border-t text-sm">
                           <td className="px-4 py-2 font-medium">{row.instrumento}</td>
                           <td className="px-4 py-2">{row.especificacao}</td>
@@ -246,11 +250,11 @@ export default function Home() {
                           <td className="px-4 py-2">{row.dataRetirada}</td>
                           <td className="px-4 py-2">{row.dataRetorno ? row.dataRetorno : 'Pendente'}</td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
