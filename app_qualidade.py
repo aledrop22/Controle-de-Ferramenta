@@ -277,7 +277,7 @@ if st.session_state.tela_atual == 'dashboard':
                     with c2:
                         st.markdown(f"👤 **{operador}** ({setor}) | 🏭 **{maquina}")
                         st.markdown(f"**{len(group)} ferramenta(s)**")
-                        if not modo_chao_fabrica:
+                        if modo_chao_fabrica:
                             st.markdown("""
                                 <style>
                                     div[data-testid="stButton"] > button[kind="secondary"] {
