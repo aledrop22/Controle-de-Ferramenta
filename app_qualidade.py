@@ -319,18 +319,13 @@ if st.session_state.tela_atual == 'dashboard':
                                             st.session_state.ferramenta_transferencia = row['ID']
                                             st.rerun()
                                 else:
-                                    col_num, col_tool, col_btn1, col_btn2 = st.columns([0.3, 5, 1, 1])
+                                    col_num, col_tool, col_btn = st.columns([0.3, 5, 1])
                                     with col_num:
                                         st.markdown(f"**{num}**")
                                     with col_tool:
                                         st.markdown(f"**{row['Instrumento']}** ({row['Especificacao']})")
                                         st.markdown(f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
-                                    with col_btn1:
-                                        if st.button("Transferir", key=f"trans_{row['ID']}", width='stretch'):
-                                            st.session_state.transferencia_ativa = True
-                                            st.session_state.ferramenta_transferencia = row['ID']
-                                            st.rerun()
-                                    with col_btn2:
+                                    with col_btn:
                                         if st.button("Devolver", key=f"dev_{row['ID']}", width='stretch'):
                                             agora = datetime.now(FUSO_HORARIO_BRASIL)
                                             # Recarregar dados para garantir sincronização
@@ -417,7 +412,7 @@ if st.session_state.tela_atual == 'dashboard':
                             st.session_state.df_dados.loc[mask, 'Hora_Retirada'] = datetime.now(FUSO_HORARIO_BRASIL).strftime("%H:%M")
                             
                             if salvar_dados(st.session_state.df_dados):
-                                st.success("✅ Transferência realizada com sucesso!")
+                                st.success(f"✅ Transferência realizada com sucesso!\n\n**DE:** {ferramenta_info['Operador']} ({ferramenta_info['Setor']}) - {ferramenta_info['Maquina']}\n**PARA:** {novo_operador} ({novo_setor}) - {nova_maquina}")
                                 st.session_state.transferencia_ativa = False
                                 st.session_state.ferramenta_transferencia = None
                                 st.rerun()
