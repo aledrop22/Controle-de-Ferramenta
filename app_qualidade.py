@@ -98,6 +98,9 @@ def carregar_dados():
         # Se o CSV antigo não tiver a coluna 'Setor', nós adicionamos para não dar erro
         if 'Setor' not in df.columns:
             df.insert(4, 'Setor', 'Não Informado')
+        # Se o CSV antigo não tiver a coluna 'Finalizacao_Esquecimento', nós adicionamos para não dar erro
+        if 'Finalizacao_Esquecimento' not in df.columns:
+            df['Finalizacao_Esquecimento'] = 'Não'
         # Limpar automaticamente ferramentas "Em Uso" com mais de 1 dia
         hoje = datetime.now(FUSO_HORARIO_BRASIL).strftime("%d/%m/%Y")
         mask_em_uso_antigo = (df['Status'] == 'Em Uso') & (df['Data_Retirada'] != hoje)
@@ -105,6 +108,7 @@ def carregar_dados():
             df.loc[mask_em_uso_antigo, 'Data_Retorno'] = hoje
             df.loc[mask_em_uso_antigo, 'Hora_Retorno'] = datetime.now(FUSO_HORARIO_BRASIL).strftime("%H:%M")
             df.loc[mask_em_uso_antigo, 'Status'] = 'Devolvido'
+            df.loc[mask_em_uso_antigo, 'Finalizacao_Esquecimento'] = 'Sim'
             # Salvar automaticamente a correção
             try:
                 with FileLock(ARQUIVO_LOCK, timeout=10):
@@ -113,7 +117,7 @@ def carregar_dados():
                 pass  # Se falhar, continua com os dados em memória
         return df
     else:
-        return pd.DataFrame(columns=['ID', 'Instrumento', 'Especificacao', 'Operador', 'Setor', 'Maquina', 'Data_Retirada', 'Hora_Retirada', 'Data_Retorno', 'Hora_Retorno', 'Status'])
+        return pd.DataFrame(columns=['ID', 'Instrumento', 'Especificacao', 'Operador', 'Setor', 'Maquina', 'Data_Retirada', 'Hora_Retirada', 'Data_Retorno', 'Hora_Retorno', 'Status', 'Finalizacao_Esquecimento'])
 
 def salvar_dados(df):
     try:
@@ -294,6 +298,7 @@ if st.session_state.tela_atual == 'dashboard':
                                         st.session_state.df_dados.loc[mask, 'Data_Retorno'] = agora.strftime("%d/%m/%Y")
                                         st.session_state.df_dados.loc[mask, 'Hora_Retorno'] = agora.strftime("%H:%M")
                                         st.session_state.df_dados.loc[mask, 'Status'] = 'Devolvido'
+                                        st.session_state.df_dados.loc[mask, 'Finalizacao_Esquecimento'] = 'Não'
                                 if salvar_dados(st.session_state.df_dados):
                                     st.rerun()
                                 else:
@@ -331,6 +336,7 @@ if st.session_state.tela_atual == 'dashboard':
                                                 st.session_state.df_dados.loc[mask, 'Data_Retorno'] = agora.strftime("%d/%m/%Y")
                                                 st.session_state.df_dados.loc[mask, 'Hora_Retorno'] = agora.strftime("%H:%M")
                                                 st.session_state.df_dados.loc[mask, 'Status'] = 'Devolvido'
+                                                st.session_state.df_dados.loc[mask, 'Finalizacao_Esquecimento'] = 'Não'
                                             if salvar_dados(st.session_state.df_dados):
                                                 st.rerun()
                                             else:
@@ -356,7 +362,7 @@ if st.session_state.tela_atual == 'dashboard':
                 # Ordenar por data/hora de devolução (mais recentes primeiro)
                 df_devolvidos['Data_Hora_Devolucao_Sort'] = pd.to_datetime(df_devolvidos['Data_Retorno'] + ' ' + df_devolvidos['Hora_Retorno'], format='%d/%m/%Y %H:%M')
                 df_devolvidos = df_devolvidos.sort_values('Data_Hora_Devolucao_Sort', ascending=False)
-                df_display = df_devolvidos[['Instrumento', 'Especificacao', 'Operador', 'Maquina', 'Data/Horas - Retirada', 'Data/Horas - Devolução']]
+                df_display = df_devolvidos[['Instrumento', 'Especificacao', 'Operador', 'Maquina', 'Data/Horas - Retirada', 'Data/Horas - Devolução', 'Finalizacao_Esquecimento']]
                 st.dataframe(df_display, hide_index=True, use_container_width=True)
             else:
                 st.info("Nenhuma devolução registrada ainda.")
@@ -693,7 +699,8 @@ elif st.session_state.tela_atual == 'retirada':
                         'Hora_Retirada': agora.strftime("%H:%M"),
                         'Data_Retorno': "",
                         'Hora_Retorno': "",
-                        'Status': "Em Uso"
+                        'Status': "Em Uso",
+                        'Finalizacao_Esquecimento': 'Não'
                     }
 
                     df_novo = pd.DataFrame([novo_registro])
