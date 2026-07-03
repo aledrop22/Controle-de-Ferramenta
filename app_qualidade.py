@@ -307,12 +307,17 @@ if st.session_state.tela_atual == 'dashboard':
                         for num, (idx, row) in enumerate(group.iterrows(), 1):
                             with st.container(border=True):
                                 if modo_chao_fabrica:
-                                    col_num, col_tool = st.columns([0.3, 5])
+                                    col_num, col_tool, col_btn = st.columns([0.3, 5, 1])
                                     with col_num:
                                         st.markdown(f"**{num}**")
                                     with col_tool:
                                         st.markdown(f"**{row['Instrumento']}** ({row['Especificacao']})")
                                         st.markdown(f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
+                                    with col_btn:
+                                        if st.button("Transferir", key=f"trans_{row['ID']}", width='stretch'):
+                                            st.session_state.transferencia_ativa = True
+                                            st.session_state.ferramenta_transferencia = row['ID']
+                                            st.rerun()
                                 else:
                                     col_num, col_tool, col_btn1, col_btn2 = st.columns([0.3, 5, 1, 1])
                                     with col_num:
