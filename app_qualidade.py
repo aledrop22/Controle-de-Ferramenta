@@ -144,6 +144,10 @@ if 'scroll_to_top' not in st.session_state:
     st.session_state.scroll_to_top = False
 if 'aba_ativa' not in st.session_state:
     st.session_state.aba_ativa = 0
+if 'transferencia_ativa' not in st.session_state:
+    st.session_state.transferencia_ativa = False
+if 'ferramenta_transferencia' not in st.session_state:
+    st.session_state.ferramenta_transferencia = None
 
 
 # Geração automática de fotos reais para todos os operadores
@@ -305,13 +309,18 @@ if st.session_state.tela_atual == 'dashboard':
                                         st.markdown(f"**{row['Instrumento']}** ({row['Especificacao']})")
                                         st.markdown(f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
                                 else:
-                                    col_num, col_tool, col_btn = st.columns([0.3, 5, 1])
+                                    col_num, col_tool, col_btn1, col_btn2 = st.columns([0.3, 5, 1, 1])
                                     with col_num:
                                         st.markdown(f"**{num}**")
                                     with col_tool:
                                         st.markdown(f"**{row['Instrumento']}** ({row['Especificacao']})")
                                         st.markdown(f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
-                                    with col_btn:
+                                    with col_btn1:
+                                        if st.button("Transferir", key=f"trans_{row['ID']}", width='stretch'):
+                                            st.session_state.transferencia_ativa = True
+                                            st.session_state.ferramenta_transferencia = row['ID']
+                                            st.rerun()
+                                    with col_btn2:
                                         if st.button("Devolver", key=f"dev_{row['ID']}", width='stretch'):
                                             agora = datetime.now(FUSO_HORARIO_BRASIL)
                                             # Recarregar dados para garantir sincronização
@@ -351,6 +360,70 @@ if st.session_state.tela_atual == 'dashboard':
                 st.dataframe(df_display, hide_index=True, use_container_width=True)
             else:
                 st.info("Nenhuma devolução registrada ainda.")
+
+    # --- MODAL DE TRANSFERÊNCIA DE FERRAMENTA ---
+    if st.session_state.transferencia_ativa and st.session_state.ferramenta_transferencia:
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("""
+                <div style="background-color: #FFA500; padding: 15px; border-radius: 5px; color: white; margin-bottom: 15px;">
+                    <h4 style="margin:0; font-size: 18px;">🔄 Transferência de Ferramenta</h4>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Buscar informações da ferramenta
+            df_ferramenta = st.session_state.df_dados[st.session_state.df_dados['ID'] == st.session_state.ferramenta_transferencia]
+            if not df_ferramenta.empty:
+                ferramenta_info = df_ferramenta.iloc[0]
+                st.info(f"Ferramenta: **{ferramenta_info['Instrumento']}** ({ferramenta_info['Especificacao']})")
+                st.info(f"Operador atual: **{ferramenta_info['Operador']}** ({ferramenta_info['Setor']}) - {ferramenta_info['Maquina']}")
+                
+                st.markdown("### Selecione o novo operador:")
+                
+                # Seleção de setor
+                novo_setor = st.selectbox("Novo Setor:", list(setores_operadores.keys()), key="novo_setor_transf")
+                
+                # Seleção de operador baseado no setor
+                operadores_setor = setores_operadores[novo_setor]
+                novo_operador = st.selectbox("Novo Operador:", operadores_setor, key="novo_operador_transf")
+                
+                # Seleção de máquina
+                maquinas_filtradas = [m for m in maquinas_lista if m != "Selecione..."]
+                nova_maquina = st.selectbox("Nova Máquina:", maquinas_filtradas, key="nova_maquina_transf")
+                
+                col_confirmar, col_cancelar = st.columns([1, 1])
+                with col_confirmar:
+                    if st.button("✅ Confirmar Transferência", type="primary", use_container_width=True):
+                        # Recarregar dados para garantir sincronização
+                        st.session_state.df_dados = carregar_dados()
+                        # Atualizar o registro
+                        mask = st.session_state.df_dados['ID'] == st.session_state.ferramenta_transferencia
+                        if mask.any():
+                            st.session_state.df_dados.loc[mask, 'Operador'] = novo_operador
+                            st.session_state.df_dados.loc[mask, 'Setor'] = novo_setor
+                            st.session_state.df_dados.loc[mask, 'Maquina'] = nova_maquina
+                            st.session_state.df_dados.loc[mask, 'Data_Retirada'] = datetime.now(FUSO_HORARIO_BRASIL).strftime("%d/%m/%Y")
+                            st.session_state.df_dados.loc[mask, 'Hora_Retirada'] = datetime.now(FUSO_HORARIO_BRASIL).strftime("%H:%M")
+                            
+                            if salvar_dados(st.session_state.df_dados):
+                                st.success("✅ Transferência realizada com sucesso!")
+                                st.session_state.transferencia_ativa = False
+                                st.session_state.ferramenta_transferencia = None
+                                st.rerun()
+                            else:
+                                st.error("❌ Não foi possível salvar a transferência. Tente novamente.")
+                
+                with col_cancelar:
+                    if st.button("❌ Cancelar", use_container_width=True):
+                        st.session_state.transferencia_ativa = False
+                        st.session_state.ferramenta_transferencia = None
+                        st.rerun()
+            else:
+                st.error("❌ Ferramenta não encontrada.")
+                if st.button("Fechar", use_container_width=True):
+                    st.session_state.transferencia_ativa = False
+                    st.session_state.ferramenta_transferencia = None
+                    st.rerun()
 
     # --- GRÁFICO DE FERRAMENTAS POR OPERADOR (APENAS MODO QUALIDADE) ---
     if not modo_chao_fabrica:
