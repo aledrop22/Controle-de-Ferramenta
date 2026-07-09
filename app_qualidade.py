@@ -101,20 +101,23 @@ def carregar_dados():
         # Se o CSV antigo não tiver a coluna 'Finalizacao_Esquecimento', nós adicionamos para não dar erro
         if 'Finalizacao_Esquecimento' not in df.columns:
             df['Finalizacao_Esquecimento'] = 'Não'
-        # Limpar automaticamente ferramentas "Em Uso" com mais de 1 dia
-        hoje = datetime.now(FUSO_HORARIO_BRASIL).strftime("%d/%m/%Y")
-        mask_em_uso_antigo = (df['Status'] == 'Em Uso') & (df['Data_Retirada'] != hoje)
-        if mask_em_uso_antigo.any():
-            df.loc[mask_em_uso_antigo, 'Data_Retorno'] = hoje
-            df.loc[mask_em_uso_antigo, 'Hora_Retorno'] = datetime.now(FUSO_HORARIO_BRASIL).strftime("%H:%M")
-            df.loc[mask_em_uso_antigo, 'Status'] = 'Devolvido'
-            df.loc[mask_em_uso_antigo, 'Finalizacao_Esquecimento'] = 'Sim'
-            # Salvar automaticamente a correção
-            try:
-                with FileLock(ARQUIVO_LOCK, timeout=10):
-                    df.to_csv(ARQUIVO_CSV, index=False, sep=';', encoding='utf-8-sig')
-            except:
-                pass  # Se falhar, continua com os dados em memória
+        
+        # Reset automático no 1º dia do mês
+        hoje = datetime.now(FUSO_HORARIO_BRASIL)
+        if hoje.day == 1:
+            # Arquivar dados antigos antes de limpar
+            arquivo_backup = f"registro_movimentacao_instrumentos_backup_{hoje.strftime('%Y%m')}.csv"
+            if not os.path.exists(arquivo_backup):
+                try:
+                    with FileLock(ARQUIVO_LOCK, timeout=10):
+                        df.to_csv(arquivo_backup, index=False, sep=';', encoding='utf-8-sig')
+                        # Limpar o arquivo principal, mantendo apenas o cabeçalho
+                        df_vazio = pd.DataFrame(columns=['ID', 'Instrumento', 'Especificacao', 'Operador', 'Setor', 'Maquina', 'Data_Retirada', 'Hora_Retirada', 'Data_Retorno', 'Hora_Retorno', 'Status', 'Finalizacao_Esquecimento'])
+                        df_vazio.to_csv(ARQUIVO_CSV, index=False, sep=';', encoding='utf-8-sig')
+                        return df_vazio
+                except:
+                    pass  # Se falhar, continua com os dados existentes
+        
         return df
     else:
         return pd.DataFrame(columns=['ID', 'Instrumento', 'Especificacao', 'Operador', 'Setor', 'Maquina', 'Data_Retirada', 'Hora_Retirada', 'Data_Retorno', 'Hora_Retorno', 'Status', 'Finalizacao_Esquecimento'])
@@ -154,27 +157,24 @@ if 'ferramenta_transferencia' not in st.session_state:
     st.session_state.ferramenta_transferencia = None
 
 
-# Geração automática de fotos reais para todos os operadores
-todos_operadores = [nome for lista in setores_operadores.values() for nome in lista]
-
-# Mapeamento de gênero para usar fotos apropriadas
-nomes_femininos = {'Karina', 'Deise', 'Giulia'}
-fotos_operadores = {}
-contador_masculino = 0
-contador_feminino = 0
-for nome in todos_operadores:
-    if nome in nomes_femininos:
-        # Usar fotos femininas (índices 32-49 no pravatar.cc são tipicamente femininos)
-        fotos_operadores[nome] = f"https://i.pravatar.cc/150?u={nome.replace(' ', '')}&img={32 + (contador_feminino % 18)}"
-        contador_feminino += 1
+# Função para obter foto do operador (local ou placeholder)
+def obter_foto_operador(nome):
+    # Normalizar nome para nome de arquivo (remover espaços e caracteres especiais)
+    nome_arquivo = nome.replace(' ', '_').replace('/', '_').replace('\\', '_')
+    caminho_foto = f"fotos_operadores/{nome_arquivo}.jpg"
+    
+    # Verificar se a foto local existe
+    if os.path.exists(caminho_foto):
+        return caminho_foto
     else:
-        # Usar fotos masculinas (índices 0-31 no pravatar.cc são tipicamente masculinos)
-        # Forçar foto masculina específica para Márcio
-        if nome == 'Márcio':
-            fotos_operadores[nome] = f"https://i.pravatar.cc/150?u={nome.replace(' ', '')}&img=11"
-        else:
-            fotos_operadores[nome] = f"https://i.pravatar.cc/150?u={nome.replace(' ', '')}&img={contador_masculino % 32}"
-            contador_masculino += 1
+        # Placeholder se não existir foto local
+        cores = ['4A90E2', '50E3C2', 'F5A623', 'D0021B', 'BD10E0', '8B572A', '417505']
+        cor = cores[abs(hash(nome)) % len(cores)]
+        return f"https://placehold.co/150x150/{cor}/FFFFFF?text={nome.replace(' ', '+')}"
+
+# Geração de fotos para todos os operadores
+todos_operadores = [nome for lista in setores_operadores.values() for nome in lista]
+fotos_operadores = {nome: obter_foto_operador(nome) for nome in todos_operadores}
 
 
 # ==========================================
@@ -204,32 +204,78 @@ if st.session_state.tela_atual == 'dashboard':
         # No modo chão de fábrica, mostra botão de atualização
         col_btn, col_stat1, col_stat2 = st.columns([1, 1, 1])
         with col_btn:
-            if st.button("🔄 Atualizar", width='stretch'):
+            st.markdown("""
+                <style>
+                    .circular-btn {
+                        width: 150px;
+                        height: 150px;
+                        border-radius: 50%;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto;
+                        cursor: pointer;
+                        transition: transform 0.2s;
+                    }
+                    .circular-btn:hover {
+                        transform: scale(1.05);
+                    }
+                </style>
+                <div class="circular-btn" style="background-color: #28a745; border: 3px solid #28a745; color: white;">
+                    <span style="font-size: 40px;">🔄</span>
+                    <span style="font-size: 14px; margin-top: 5px;">Atualizar</span>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.button("", key="btn_atualizar_circular", use_container_width=True):
                 st.session_state.df_dados = carregar_dados()
                 st.rerun()
         with col_stat1:
             df = st.session_state.df_dados
             df_uso = df[df['Status'] == 'Em Uso']
             st.markdown("""
-                <div style="background-color: #003366; padding: 20px; border-radius: 10px; border: 2px solid #003366; color: white; text-align: center;">
-                    <h3 style="margin:0; font-size: 32px;">""" + str(len(df_uso)) + """</h3>
-                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🟢 Em Uso</p>
+                <div class="circular-btn" style="background-color: #003366; border: 3px solid #003366; color: white;">
+                    <span style="font-size: 48px; font-weight: bold;">""" + str(len(df_uso)) + """</span>
+                    <span style="font-size: 14px; margin-top: 5px;">🟢 Em Uso</span>
                 </div>
             """, unsafe_allow_html=True)
         with col_stat2:
             df_devolvidos = df[df['Status'] == 'Devolvido']
             devolvidas_hoje = len(df_devolvidos[df_devolvidos['Data_Retorno'] == datetime.now(FUSO_HORARIO_BRASIL).strftime("%d/%m/%Y")])
             st.markdown("""
-                <div style="background-color: #000000; padding: 20px; border-radius: 10px; border: 2px solid #000000; color: white; text-align: center;">
-                    <h3 style="margin:0; font-size: 32px;">""" + str(devolvidas_hoje) + """</h3>
-                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🔴 Devolvidas Hoje</p>
+                <div class="circular-btn" style="background-color: #000000; border: 3px solid #000000; color: white;">
+                    <span style="font-size: 48px; font-weight: bold;">""" + str(devolvidas_hoje) + """</span>
+                    <span style="font-size: 14px; margin-top: 5px;">🔴 Devolvidas Hoje</span>
                 </div>
             """, unsafe_allow_html=True)
     else:
         # Modo qualidade - mostra botão de nova retirada
         col_btn, col_stat1, col_stat2 = st.columns([1, 1, 1])
         with col_btn:
-            if st.button("➕ Nova Retirada", width='stretch', type="primary"):
+            st.markdown("""
+                <style>
+                    .circular-btn {
+                        width: 150px;
+                        height: 150px;
+                        border-radius: 50%;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto;
+                        cursor: pointer;
+                        transition: transform 0.2s;
+                    }
+                    .circular-btn:hover {
+                        transform: scale(1.05);
+                    }
+                </style>
+                <div class="circular-btn" style="background-color: #dc3545; border: 3px solid #dc3545; color: white;">
+                    <span style="font-size: 40px;">➕</span>
+                    <span style="font-size: 14px; margin-top: 5px;">Nova Retirada</span>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.button("", key="btn_nova_retirada_circular", use_container_width=True):
                 st.session_state.tela_atual = 'retirada'
                 st.session_state.operador_logado = None
                 st.session_state.setor_logado = None
@@ -238,18 +284,18 @@ if st.session_state.tela_atual == 'dashboard':
             df = st.session_state.df_dados
             df_uso = df[df['Status'] == 'Em Uso']
             st.markdown("""
-                <div style="background-color: #003366; padding: 20px; border-radius: 10px; border: 2px solid #003366; color: white; text-align: center;">
-                    <h3 style="margin:0; font-size: 32px;">""" + str(len(df_uso)) + """</h3>
-                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🟢 Em Uso</p>
+                <div class="circular-btn" style="background-color: #003366; border: 3px solid #003366; color: white;">
+                    <span style="font-size: 48px; font-weight: bold;">""" + str(len(df_uso)) + """</span>
+                    <span style="font-size: 14px; margin-top: 5px;">🟢 Em Uso</span>
                 </div>
             """, unsafe_allow_html=True)
         with col_stat2:
             df_devolvidos = df[df['Status'] == 'Devolvido']
             devolvidas_hoje = len(df_devolvidos[df_devolvidos['Data_Retorno'] == datetime.now(FUSO_HORARIO_BRASIL).strftime("%d/%m/%Y")])
             st.markdown("""
-                <div style="background-color: #000000; padding: 20px; border-radius: 10px; border: 2px solid #000000; color: white; text-align: center;">
-                    <h3 style="margin:0; font-size: 32px;">""" + str(devolvidas_hoje) + """</h3>
-                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🔴 Devolvidas Hoje</p>
+                <div class="circular-btn" style="background-color: #000000; border: 3px solid #000000; color: white;">
+                    <span style="font-size: 48px; font-weight: bold;">""" + str(devolvidas_hoje) + """</span>
+                    <span style="font-size: 14px; margin-top: 5px;">🔴 Devolvidas Hoje</span>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -355,15 +401,35 @@ if st.session_state.tela_atual == 'dashboard':
             """, unsafe_allow_html=True)
 
             if not df_devolvidos.empty:
-                # Criar colunas combinadas de data/hora
-                df_devolvidos = df_devolvidos.copy()
-                df_devolvidos['Data/Horas - Retirada'] = df_devolvidos['Data_Retirada'] + ' às ' + df_devolvidos['Hora_Retirada']
-                df_devolvidos['Data/Horas - Devolução'] = df_devolvidos['Data_Retorno'] + ' às ' + df_devolvidos['Hora_Retorno']
-                # Ordenar por data/hora de devolução (mais recentes primeiro)
-                df_devolvidos['Data_Hora_Devolucao_Sort'] = pd.to_datetime(df_devolvidos['Data_Retorno'] + ' ' + df_devolvidos['Hora_Retorno'], format='%d/%m/%Y %H:%M')
-                df_devolvidos = df_devolvidos.sort_values('Data_Hora_Devolucao_Sort', ascending=False)
-                df_display = df_devolvidos[['Instrumento', 'Especificacao', 'Operador', 'Maquina', 'Data/Horas - Retirada', 'Data/Horas - Devolução', 'Finalizacao_Esquecimento']]
-                st.dataframe(df_display, hide_index=True, use_container_width=True)
+                # Filtros
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    filtro_operador = st.selectbox("Filtrar por Operador:", ["Todos"] + sorted(df_devolvidos['Operador'].unique().tolist()), key="filtro_operador")
+                with col2:
+                    filtro_ferramenta = st.selectbox("Filtrar por Ferramenta:", ["Todas"] + sorted(df_devolvidos['Instrumento'].unique().tolist()), key="filtro_ferramenta")
+                with col3:
+                    filtro_setor = st.selectbox("Filtrar por Setor:", ["Todos"] + sorted(df_devolvidos['Setor'].unique().tolist()), key="filtro_setor")
+                
+                # Aplicar filtros
+                df_filtrado = df_devolvidos.copy()
+                if filtro_operador != "Todos":
+                    df_filtrado = df_filtrado[df_filtrado['Operador'] == filtro_operador]
+                if filtro_ferramenta != "Todas":
+                    df_filtrado = df_filtrado[df_filtrado['Instrumento'] == filtro_ferramenta]
+                if filtro_setor != "Todos":
+                    df_filtrado = df_filtrado[df_filtrado['Setor'] == filtro_setor]
+                
+                if not df_filtrado.empty:
+                    # Criar colunas combinadas de data/hora
+                    df_filtrado['Data/Horas - Retirada'] = df_filtrado['Data_Retirada'] + ' às ' + df_filtrado['Hora_Retirada']
+                    df_filtrado['Data/Horas - Devolução'] = df_filtrado['Data_Retorno'] + ' às ' + df_filtrado['Hora_Retorno']
+                    # Ordenar por data/hora de devolução (mais recentes primeiro)
+                    df_filtrado['Data_Hora_Devolucao_Sort'] = pd.to_datetime(df_filtrado['Data_Retorno'] + ' ' + df_filtrado['Hora_Retorno'], format='%d/%m/%Y %H:%M')
+                    df_filtrado = df_filtrado.sort_values('Data_Hora_Devolucao_Sort', ascending=False)
+                    df_display = df_filtrado[['Instrumento', 'Especificacao', 'Operador', 'Setor', 'Maquina', 'Data/Horas - Retirada', 'Data/Horas - Devolução', 'Finalizacao_Esquecimento']]
+                    st.dataframe(df_display, hide_index=True, use_container_width=True)
+                else:
+                    st.info("Nenhum resultado encontrado com os filtros selecionados.")
             else:
                 st.info("Nenhuma devolução registrada ainda.")
 

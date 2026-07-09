@@ -59,14 +59,24 @@ if 'setor_logado' not in st.session_state:
 if 'ferramentas_selecionadas' not in st.session_state:
     st.session_state.ferramentas_selecionadas = []
 
+# Função para obter foto do operador (local ou placeholder)
+def obter_foto_operador(nome):
+    # Normalizar nome para nome de arquivo (remover espaços e caracteres especiais)
+    nome_arquivo = nome.replace(' ', '_').replace('/', '_').replace('\\', '_')
+    caminho_foto = f"fotos_operadores/{nome_arquivo}.jpg"
+    
+    # Verificar se a foto local existe
+    if os.path.exists(caminho_foto):
+        return caminho_foto
+    else:
+        # Placeholder se não existir foto local
+        cores = ['4A90E2', '50E3C2', 'F5A623', 'D0021B', 'BD10E0', '8B572A', '417505']
+        cor = cores[abs(hash(nome)) % len(cores)]
+        return f"https://placehold.co/150x150/{cor}/FFFFFF?text={nome.replace(' ', '+')}"
+
 # Função utilitária para gerar placeholder de foto por nome (uso no modo somente visualização)
-
-
 def foto_por_nome(nome):
-    cores = ['4A90E2', '50E3C2', 'F5A623',
-             'D0021B', 'BD10E0', '8B572A', '417505']
-    cor = cores[abs(hash(nome)) % len(cores)]
-    return f"https://placehold.co/150x150/{cor}/FFFFFF?text={nome.replace(' ', '+')}"
+    return obter_foto_operador(nome)
 
 
 # ==========================================
@@ -124,14 +134,10 @@ if modo_acesso == "Chão de Fábrica (Apenas Visão)":
 # ==========================================
 elif modo_acesso == "Qualidade (Interativo)":
 
-    # Geração automática de fotos temporárias para todos os operadores
+    # Geração de fotos para todos os operadores
     todos_operadores = [nome for lista in setores_operadores.values()
                         for nome in lista]
-    # Cores diferentes para dar um visual legal
-    cores = ['4A90E2', '50E3C2', 'F5A623',
-             'D0021B', 'BD10E0', '8B572A', '417505']
-    fotos_operadores = {
-        nome: f"https://placehold.co/150x150/{cores[i % len(cores)]}/FFFFFF?text={nome.replace(' ', '+')}" for i, nome in enumerate(todos_operadores)}
+    fotos_operadores = {nome: obter_foto_operador(nome) for nome in todos_operadores}
 
     # ==========================================
     # LÓGICA DE NAVEGAÇÃO DE TELAS
