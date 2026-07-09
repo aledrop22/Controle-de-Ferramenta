@@ -204,78 +204,32 @@ if st.session_state.tela_atual == 'dashboard':
         # No modo chão de fábrica, mostra botão de atualização
         col_btn, col_stat1, col_stat2 = st.columns([1, 1, 1])
         with col_btn:
-            st.markdown("""
-                <style>
-                    .circular-btn {
-                        width: 150px;
-                        height: 150px;
-                        border-radius: 50%;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto;
-                        cursor: pointer;
-                        transition: transform 0.2s;
-                    }
-                    .circular-btn:hover {
-                        transform: scale(1.05);
-                    }
-                </style>
-                <div class="circular-btn" style="background-color: #28a745; border: 3px solid #28a745; color: white;">
-                    <span style="font-size: 40px;">🔄</span>
-                    <span style="font-size: 14px; margin-top: 5px;">Atualizar</span>
-                </div>
-            """, unsafe_allow_html=True)
-            if st.button("", key="btn_atualizar_circular", use_container_width=True):
+            if st.button("🔄 Atualizar", width='stretch'):
                 st.session_state.df_dados = carregar_dados()
                 st.rerun()
         with col_stat1:
             df = st.session_state.df_dados
             df_uso = df[df['Status'] == 'Em Uso']
             st.markdown("""
-                <div class="circular-btn" style="background-color: #003366; border: 3px solid #003366; color: white;">
-                    <span style="font-size: 48px; font-weight: bold;">""" + str(len(df_uso)) + """</span>
-                    <span style="font-size: 14px; margin-top: 5px;">🟢 Em Uso</span>
+                <div style="background-color: #003366; padding: 20px; border-radius: 10px; border: 2px solid #003366; color: white; text-align: center;">
+                    <h3 style="margin:0; font-size: 32px;">""" + str(len(df_uso)) + """</h3>
+                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🟢 Em Uso</p>
                 </div>
             """, unsafe_allow_html=True)
         with col_stat2:
             df_devolvidos = df[df['Status'] == 'Devolvido']
             devolvidas_hoje = len(df_devolvidos[df_devolvidos['Data_Retorno'] == datetime.now(FUSO_HORARIO_BRASIL).strftime("%d/%m/%Y")])
             st.markdown("""
-                <div class="circular-btn" style="background-color: #000000; border: 3px solid #000000; color: white;">
-                    <span style="font-size: 48px; font-weight: bold;">""" + str(devolvidas_hoje) + """</span>
-                    <span style="font-size: 14px; margin-top: 5px;">🔴 Devolvidas Hoje</span>
+                <div style="background-color: #000000; padding: 20px; border-radius: 10px; border: 2px solid #000000; color: white; text-align: center;">
+                    <h3 style="margin:0; font-size: 32px;">""" + str(devolvidas_hoje) + """</h3>
+                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🔴 Devolvidas Hoje</p>
                 </div>
             """, unsafe_allow_html=True)
     else:
         # Modo qualidade - mostra botão de nova retirada
         col_btn, col_stat1, col_stat2 = st.columns([1, 1, 1])
         with col_btn:
-            st.markdown("""
-                <style>
-                    .circular-btn {
-                        width: 150px;
-                        height: 150px;
-                        border-radius: 50%;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto;
-                        cursor: pointer;
-                        transition: transform 0.2s;
-                    }
-                    .circular-btn:hover {
-                        transform: scale(1.05);
-                    }
-                </style>
-                <div class="circular-btn" style="background-color: #dc3545; border: 3px solid #dc3545; color: white;">
-                    <span style="font-size: 40px;">➕</span>
-                    <span style="font-size: 14px; margin-top: 5px;">Nova Retirada</span>
-                </div>
-            """, unsafe_allow_html=True)
-            if st.button("", key="btn_nova_retirada_circular", use_container_width=True):
+            if st.button("➕ Nova Retirada", width='stretch', type="primary"):
                 st.session_state.tela_atual = 'retirada'
                 st.session_state.operador_logado = None
                 st.session_state.setor_logado = None
@@ -284,18 +238,18 @@ if st.session_state.tela_atual == 'dashboard':
             df = st.session_state.df_dados
             df_uso = df[df['Status'] == 'Em Uso']
             st.markdown("""
-                <div class="circular-btn" style="background-color: #003366; border: 3px solid #003366; color: white;">
-                    <span style="font-size: 48px; font-weight: bold;">""" + str(len(df_uso)) + """</span>
-                    <span style="font-size: 14px; margin-top: 5px;">🟢 Em Uso</span>
+                <div style="background-color: #003366; padding: 20px; border-radius: 10px; border: 2px solid #003366; color: white; text-align: center;">
+                    <h3 style="margin:0; font-size: 32px;">""" + str(len(df_uso)) + """</h3>
+                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🟢 Em Uso</p>
                 </div>
             """, unsafe_allow_html=True)
         with col_stat2:
             df_devolvidos = df[df['Status'] == 'Devolvido']
             devolvidas_hoje = len(df_devolvidos[df_devolvidos['Data_Retorno'] == datetime.now(FUSO_HORARIO_BRASIL).strftime("%d/%m/%Y")])
             st.markdown("""
-                <div class="circular-btn" style="background-color: #000000; border: 3px solid #000000; color: white;">
-                    <span style="font-size: 48px; font-weight: bold;">""" + str(devolvidas_hoje) + """</span>
-                    <span style="font-size: 14px; margin-top: 5px;">🔴 Devolvidas Hoje</span>
+                <div style="background-color: #000000; padding: 20px; border-radius: 10px; border: 2px solid #000000; color: white; text-align: center;">
+                    <h3 style="margin:0; font-size: 32px;">""" + str(devolvidas_hoje) + """</h3>
+                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🔴 Devolvidas Hoje</p>
                 </div>
             """, unsafe_allow_html=True)
 

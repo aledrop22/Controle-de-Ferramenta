@@ -33,9 +33,17 @@ def carregar_dados():
         # Se o CSV antigo não tiver a coluna 'Setor', nós adicionamos para não dar erro
         if 'Setor' not in df.columns:
             df.insert(4, 'Setor', 'Não Informado')
+        # Se o CSV antigo não tiver a coluna 'Finalizacao_Esquecimento', nós adicionamos para não dar erro
+        if 'Finalizacao_Esquecimento' not in df.columns:
+            df['Finalizacao_Esquecimento'] = 'Não'
+        
+        # REMOVIDO: Limpeza automática de ferramentas antigas
+        # Isso estava causando o bug onde operadores apareciam como devolvendo ferramentas automaticamente
+        # Agora as ferramentas só são devolvidas quando o usuário clica no botão de devolução
+        
         return df
     else:
-        return pd.DataFrame(columns=['ID', 'Instrumento', 'Especificacao', 'Operador', 'Setor', 'Maquina', 'Data_Retirada', 'Hora_Retirada', 'Data_Retorno', 'Hora_Retorno', 'Status'])
+        return pd.DataFrame(columns=['ID', 'Instrumento', 'Especificacao', 'Operador', 'Setor', 'Maquina', 'Data_Retirada', 'Hora_Retirada', 'Data_Retorno', 'Hora_Retorno', 'Status', 'Finalizacao_Esquecimento'])
 
 
 def salvar_dados(df):
