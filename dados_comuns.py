@@ -2,17 +2,19 @@
 
 # --- DADOS DA FÁBRICA (Operadores, Setores e Máquinas) ---
 setores_operadores = {
-    "Usinagem": ["Alex Cardoso", "Leandro", "Pedro Henrique", "Rodrigo", "Vinícius", "Márcio", "Gabriel", "Lucas", "Jadson Oliveira"],
-    "Produção": ["Sr. Luis", "Luis", "Pablo", "Felipe Galves", "Amadeus", "Alexandre C."],
-    "Manutenção": ["Nilson", "Marcos", "Renato", "Eng. André Machado"],
-    "Estoque": ["Elias", "Lucas", "Victor", "Rafael"],
-    "Expedição": ["Karina", "Deise", "Frank", "Giulia", "Adriano", "Ismael"]
+    "Usinagem": ["Alex Cardoso", "Leandro", "Pedro Henrique", "Rodrigo", "Vinícius", "Márcio", "Gabriel", "Jadson Oliveira", "Lucas Alves", "Vinicius Lopes"],
+    "Produção": ["Luis Laerte", "Pablo", "Felipe Galves"],
+    "Manutenção": ["Nilson", "Marcos", "Renato"],
+    "Estoque": ["Elias", "Lucas", "Victor", "Rafael", "Victor Soares"],
+    "Expedição": ["Deise", "Frank", "Giulia", "Adriano", "Ismael", "Karina de Souza"],
+    "PCP": ["Jose", "Eng. André Machado", "Pedro Andreassi"],
+    "Qualidade": ["Pedro Lima", "Alexandre", "Lilian"]
 }
 
 maquinas_lista = [
-    "Selecione...", "GL 01", "GL 02", "CNC 01", "CNC 02",
+    "Selecione...", "GL 01", "GL 02", "CNC 30", "CNC 35",
     "FRESA 01", "FRESA 02", "TORNO 01", "TORNO 02", "TORNO 03",
-    "PRODUÇÃO", "EXPEDIÇÃO", "ESTOQUE", "MANUTENÇÃO", "PCP"
+    "PRODUÇÃO", "EXPEDIÇÃO", "ESTOQUE", "MANUTENÇÃO", "PCP", "QUALIDADE"
 ]
 
 # --- DADOS DO INVENTÁRIO PADRÃO ---
