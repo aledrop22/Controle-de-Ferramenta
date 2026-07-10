@@ -193,7 +193,8 @@ elif modo_acesso == "Qualidade (Interativo)":
                             st.markdown(
                                 f"👤 **{operador}** ({setor}) | 🏭 **{maquina}")
                             st.markdown(f"**{len(group)} ferramenta(s)**")
-                            if st.button("🔄 Devolver Tudo", key=f"dev_all_{operador}_{maquina}", type="secondary"):
+                            texto_botao = "🔄 Devolver" if len(group) == 1 else "🔄 Devolver Tudo"
+                            if st.button(texto_botao, key=f"dev_all_{operador}_{maquina}", type="secondary"):
                                 agora = datetime.now(FUSO_HORARIO_BRASIL)
                                 for idx in group.index:
                                     st.session_state.df_dados.loc[idx, 'Data_Retorno'] = agora.strftime("%d/%m/%Y")

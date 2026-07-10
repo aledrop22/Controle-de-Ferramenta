@@ -286,7 +286,8 @@ if st.session_state.tela_atual == 'dashboard':
                                     }
                                 </style>
                             """, unsafe_allow_html=True)
-                            if st.button("🔄 Devolver Tudo", key=f"dev_all_{operador}_{maquina}", type="secondary", use_container_width=True):
+                            texto_botao = "🔄 Devolver" if len(group) == 1 else "🔄 Devolver Tudo"
+                            if st.button(texto_botao, key=f"dev_all_{operador}_{maquina}", type="secondary", use_container_width=True):
                                 agora = datetime.now(FUSO_HORARIO_BRASIL)
                                 # Recarregar dados para garantir sincronização
                                 st.session_state.df_dados = carregar_dados()

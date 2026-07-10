@@ -2,12 +2,12 @@
 
 # --- DADOS DA FÁBRICA (Operadores, Setores e Máquinas) ---
 setores_operadores = {
-    "Usinagem": ["Alex Cardoso", "Leandro", "Pedro Henrique", "Rodrigo", "Vinícius", "Márcio", "Gabriel", "Jadson Oliveira", "Lucas Alves", "Vinicius Lopes"],
-    "Produção": ["Luis Laerte", "Pablo", "Felipe Galves"],
+    "Usinagem": ["Alex Cardoso", "Leandro", "Pedro Henrique", "Rodrigo", "Márcio", "Gabriel", "Jadson Oliveira", "Lucas Alves", "Vinicius Lopes"],
+    "Produção": ["Sr. Luis", "Luis Laerte", "Pablo", "Felipe Galves"],
     "Manutenção": ["Nilson", "Marcos", "Renato"],
-    "Estoque": ["Elias", "Lucas", "Victor", "Rafael", "Victor Soares"],
+    "Estoque": ["Elias", "Lucas", "Rafael", "Victor Soares"],
     "Expedição": ["Deise", "Frank", "Giulia", "Adriano", "Ismael", "Karina de Souza"],
-    "PCP": ["Jose", "Eng. André Machado", "Pedro Andreassi"],
+    "PCP": ["Jose", "Eng. André Machado", "Pedro Andreassi", "Ygor"],
     "Qualidade": ["Pedro Lima", "Alexandre", "Lilian"]
 }
 
