@@ -641,6 +641,76 @@ if st.session_state.tela_atual == 'dashboard':
             else:
                 st.info("Nenhuma devolução registrada ainda.")
 
+        # --- MAPA DE CALOR: OPERADORES VS SETORES ---
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("""
+                <div style="background-color: #003366; padding: 15px; border-radius: 5px; color: white; margin-bottom: 15px;">
+                    <h4 style="margin:0; font-size: 18px;">🏭 Mapa de Calor: Operadores vs Setores</h4>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Seleção de período para o mapa de calor
+            periodo_heatmap = st.selectbox("Selecione o período para análise:", 
+                ["Últimos 7 dias", "Últimos 30 dias", "Últimos 60 dias", "Últimos 90 dias", "Este Mês", "Mês Anterior", "Todos"],
+                key="periodo_heatmap")
+            
+            # Filtrar dados pelo período selecionado
+            df_heatmap = df.copy()
+            
+            if periodo_heatmap != "Todos":
+                agora = datetime.now(FUSO_HORARIO_BRASIL)
+                
+                if periodo_heatmap == "Últimos 7 dias":
+                    data_limite = (agora - pd.Timedelta(days=7)).strftime("%d/%m/%Y")
+                    df_heatmap = df_heatmap[df_heatmap['Data_Retirada'] >= data_limite]
+                elif periodo_heatmap == "Últimos 30 dias":
+                    data_limite = (agora - pd.Timedelta(days=30)).strftime("%d/%m/%Y")
+                    df_heatmap = df_heatmap[df_heatmap['Data_Retirada'] >= data_limite]
+                elif periodo_heatmap == "Últimos 60 dias":
+                    data_limite = (agora - pd.Timedelta(days=60)).strftime("%d/%m/%Y")
+                    df_heatmap = df_heatmap[df_heatmap['Data_Retirada'] >= data_limite]
+                elif periodo_heatmap == "Últimos 90 dias":
+                    data_limite = (agora - pd.Timedelta(days=90)).strftime("%d/%m/%Y")
+                    df_heatmap = df_heatmap[df_heatmap['Data_Retirada'] >= data_limite]
+                elif periodo_heatmap == "Este Mês":
+                    primeiro_dia_mes = agora.replace(day=1).strftime("%d/%m/%Y")
+                    df_heatmap = df_heatmap[df_heatmap['Data_Retirada'] >= primeiro_dia_mes]
+                elif periodo_heatmap == "Mês Anterior":
+                    primeiro_dia_mes_atual = agora.replace(day=1)
+                    ultimo_dia_mes_anterior = (primeiro_dia_mes_atual - pd.Timedelta(days=1))
+                    primeiro_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1)
+                    df_heatmap = df_heatmap[(df_heatmap['Data_Retirada'] >= primeiro_dia_mes_anterior.strftime("%d/%m/%Y")) & (df_heatmap['Data_Retirada'] <= ultimo_dia_mes_anterior.strftime("%d/%m/%Y"))]
+            
+            # Criar matriz para heatmap
+            heatmap_data = df_heatmap.groupby(['Setor', 'Operador']).size().reset_index(name='Quantidade')
+            
+            if not heatmap_data.empty:
+                # Pivot para criar matriz
+                heatmap_matrix = heatmap_data.pivot(index='Setor', columns='Operador', values='Quantidade').fillna(0)
+                
+                # Criar heatmap com valores nas células
+                fig_heatmap = px.imshow(
+                    heatmap_matrix,
+                    labels=dict(x="Operador", y="Setor", color="Quantidade"),
+                    x=heatmap_matrix.columns,
+                    y=heatmap_matrix.index,
+                    color_continuous_scale='Purples',
+                    title='Intensidade de Uso por Setor e Operador',
+                    text_auto=True
+                )
+                fig_heatmap.update_traces(
+                    texttemplate="%{z}",
+                    textfont={"size": 10}
+                )
+                fig_heatmap.update_layout(
+                    height=500,
+                    xaxis={'tickangle': -45}
+                )
+                st.plotly_chart(fig_heatmap, use_container_width=True)
+            else:
+                st.info("Nenhum dado encontrado para o período selecionado.")
+
 elif st.session_state.tela_atual == 'retirada':
     # --- TELA 2: FLUXO DE RETIRADA ---
     col_titulo, col_voltar = st.columns([8, 2])
