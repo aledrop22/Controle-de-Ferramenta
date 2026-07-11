@@ -155,6 +155,18 @@ elif modo_acesso == "Qualidade (Interativo)":
         # --- TELA 1: DASHBOARD EM TEMPO REAL ---
         st.title("📊 Painel de Ferramentas - Tempo Real")
 
+        # Alerta antes das 17h (15-10 minutos antes)
+        agora = datetime.now(FUSO_HORARIO_BRASIL)
+        hora_atual = agora.hour + agora.minute / 60
+        if 16.75 <= hora_atual < 17.0:  # 16:45 às 17:00
+            st.markdown("""
+                <div style="background-color: #FF0000; padding: 30px; border-radius: 10px; border: 5px solid #000000; margin-bottom: 20px;">
+                    <h2 style="margin:0; color: #FFFF00; font-size: 28px; text-align: center; font-weight: bold;">
+                        ⚠️ ATENÇÃO - Obrigatório Retornar Ferramentas Retiradas da Qualidade
+                    </h2>
+                </div>
+            """, unsafe_allow_html=True)
+
         col_btn, _ = st.columns([2, 8])
         with col_btn:
             if st.button("➕ Nova Retirada", width='stretch', type="primary"):
