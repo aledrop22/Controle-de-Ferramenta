@@ -614,12 +614,35 @@ elif st.session_state.tela_atual == 'retirada':
 
     # --- PASSO 4: ESCOLHER FERRAMENTAS ---
     elif st.session_state.passo_retirada == 4:
-        st.markdown(f"""
-            <div style="background-color: #003366; padding: 20px; border-radius: 5px; color: white; margin-bottom: 20px;">
-                <h3 style="margin:0;">🔧 Passo 4: O que você vai retirar?</h3>
-                <p style="margin:5px 0 0 0;">{st.session_state.operador_logado} - {st.session_state.setor_logado} - {st.session_state.maquina_selecionada}</p>
-            </div>
-        """, unsafe_allow_html=True)
+        # Cards segmentados para informações
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(f"""
+                <div style="background-color: #003366; padding: 15px; border-radius: 8px; color: white; text-align: center; border: 2px solid #003366;">
+                    <p style="margin:0; font-size: 12px; opacity: 0.8;">👤 NOME</p>
+                    <h4 style="margin:5px 0 0 0;">{st.session_state.operador_logado}</h4>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+                <div style="background-color: #003366; padding: 15px; border-radius: 8px; color: white; text-align: center; border: 2px solid #003366;">
+                    <p style="margin:0; font-size: 12px; opacity: 0.8;">🏭 MÁQUINA</p>
+                    <h4 style="margin:5px 0 0 0;">{st.session_state.maquina_selecionada}</h4>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            ferramenta_text = st.session_state.ferramentas_selecionadas[0] if st.session_state.ferramentas_selecionadas else "Nenhuma"
+            if len(st.session_state.ferramentas_selecionadas) > 1:
+                ferramenta_text = f"{len(st.session_state.ferramentas_selecionadas)} itens"
+            st.markdown(f"""
+                <div style="background-color: #003366; padding: 15px; border-radius: 8px; color: white; text-align: center; border: 2px solid #003366;">
+                    <p style="margin:0; font-size: 12px; opacity: 0.8;">🔧 FERRAMENTA</p>
+                    <h4 style="margin:5px 0 0 0; font-size: 14px;">{ferramenta_text}</h4>
+                </div>
+            """, unsafe_allow_html=True)
 
         col_voltar_passo, _ = st.columns([1, 9])
         with col_voltar_passo:
