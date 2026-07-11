@@ -554,11 +554,14 @@ elif st.session_state.tela_atual == 'retirada':
                 if i + j < len(nomes_setor):
                     nome_op = nomes_setor[i + j]
                     with cols[j]:
-                        st.image(fotos_operadores[nome_op], width=70)
-                        if st.button(f"{nome_op}", key=f"btn_login_{nome_op}", width='content'):
-                            st.session_state.operador_logado = nome_op
-                            st.session_state.passo_retirada = 3
-                            st.rerun()
+                        col_img, col_nome = st.columns([1, 3])
+                        with col_img:
+                            st.image(fotos_operadores[nome_op], width=50)
+                        with col_nome:
+                            if st.button(f"{nome_op}", key=f"btn_login_{nome_op}", width='stretch'):
+                                st.session_state.operador_logado = nome_op
+                                st.session_state.passo_retirada = 3
+                                st.rerun()
 
     # --- PASSO 3: ESCOLHER MÁQUINA ---
     elif st.session_state.passo_retirada == 3:

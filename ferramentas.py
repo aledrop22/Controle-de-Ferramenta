@@ -290,12 +290,14 @@ elif modo_acesso == "Qualidade (Interativo)":
                         if i + j < len(nomes_setor):
                             nome_op = nomes_setor[i + j]
                             with cols[j]:
-                                st.image(
-                                    fotos_operadores[nome_op], width='stretch')
-                                if st.button(f"{nome_op}", key=f"btn_login_{nome_op}", width='content'):
-                                    st.session_state.operador_logado = nome_op
-                                    st.session_state.setor_logado = setor_escolhido
-                                    st.rerun()
+                                col_img, col_nome = st.columns([1, 3])
+                                with col_img:
+                                    st.image(fotos_operadores[nome_op], width=50)
+                                with col_nome:
+                                    if st.button(f"{nome_op}", key=f"btn_login_{nome_op}", width='stretch'):
+                                        st.session_state.operador_logado = nome_op
+                                        st.session_state.setor_logado = setor_escolhido
+                                        st.rerun()
             st.stop()  # Interrompe a tela até o operador se identificar
 
         # --- SE O OPERADOR JÁ ESTIVER LOGADO ---
