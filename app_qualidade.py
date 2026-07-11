@@ -666,31 +666,28 @@ if st.session_state.tela_atual == 'dashboard':
             if periodo_estatisticas != "Todos":
                 agora = datetime.now(FUSO_HORARIO_BRASIL)
                 
+                # Filtrar apenas registros com datas válidas
+                df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'].notna()]
+                
                 if periodo_estatisticas == "Últimos 7 dias":
                     data_limite = agora - pd.Timedelta(days=7)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]  # Apenas retiradas com data
                     df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
                 elif periodo_estatisticas == "Últimos 30 dias":
                     data_limite = agora - pd.Timedelta(days=30)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
                     df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
                 elif periodo_estatisticas == "Últimos 60 dias":
                     data_limite = agora - pd.Timedelta(days=60)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
                     df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
                 elif periodo_estatisticas == "Últimos 90 dias":
                     data_limite = agora - pd.Timedelta(days=90)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
                     df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
                 elif periodo_estatisticas == "Este Mês":
                     primeiro_dia_mes = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
                     df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= primeiro_dia_mes]
                 elif periodo_estatisticas == "Mês Anterior":
                     primeiro_dia_mes_atual = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                     ultimo_dia_mes_anterior = primeiro_dia_mes_atual - pd.Timedelta(days=1)
                     primeiro_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
                     df_estatisticas = df_estatisticas[(df_estatisticas['Data_Hora_Retirada'] >= primeiro_dia_mes_anterior) & (df_estatisticas['Data_Hora_Retirada'] <= ultimo_dia_mes_anterior)]
             
             if not df_estatisticas.empty:
@@ -761,14 +758,19 @@ if st.session_state.tela_atual == 'dashboard':
                     # Pivot para criar matriz
                     heatmap_matrix = heatmap_data.pivot(index='Setor', columns='Operador', values='Quantidade').fillna(0)
                     
-                    # Criar heatmap
+                    # Criar heatmap com valores nas células
                     fig_heatmap = px.imshow(
                         heatmap_matrix,
                         labels=dict(x="Operador", y="Setor", color="Quantidade"),
                         x=heatmap_matrix.columns,
                         y=heatmap_matrix.index,
                         color_continuous_scale='Purples',
-                        title='Intensidade de Uso por Setor e Operador'
+                        title='Intensidade de Uso por Setor e Operador',
+                        text_auto=True  # Mostra valores nas células
+                    )
+                    fig_heatmap.update_traces(
+                        texttemplate="%{z}",
+                        textfont={"size": 10}
                     )
                     fig_heatmap.update_layout(
                         height=500,
