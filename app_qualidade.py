@@ -598,29 +598,32 @@ if st.session_state.tela_atual == 'dashboard':
                     df_filtrado['Data_Hora_Retorno'] = pd.to_datetime(df_filtrado['Data_Retorno'] + ' ' + df_filtrado['Hora_Retorno'], format='%d/%m/%Y %H:%M', errors='coerce')
                     df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'].notna()]
                     
+                    # Converter para timestamp para garantir compatibilidade
+                    df_filtrado['Data_Hora_Retorno_ts'] = pd.to_datetime(df_filtrado['Data_Hora_Retorno'])
+                    
                     if filtro_periodo == "Hoje":
                         data_limite = agora.replace(hour=0, minute=0, second=0, microsecond=0)
-                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno_ts'] >= data_limite]
                     elif filtro_periodo == "Últimos 7 dias":
                         data_limite = agora - pd.Timedelta(days=7)
-                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno_ts'] >= data_limite]
                     elif filtro_periodo == "Últimos 30 dias":
                         data_limite = agora - pd.Timedelta(days=30)
-                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno_ts'] >= data_limite]
                     elif filtro_periodo == "Últimos 60 dias":
                         data_limite = agora - pd.Timedelta(days=60)
-                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno_ts'] >= data_limite]
                     elif filtro_periodo == "Últimos 90 dias":
                         data_limite = agora - pd.Timedelta(days=90)
-                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno_ts'] >= data_limite]
                     elif filtro_periodo == "Este Mês":
                         primeiro_dia_mes = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= primeiro_dia_mes]
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno_ts'] >= primeiro_dia_mes]
                     elif filtro_periodo == "Mês Anterior":
                         primeiro_dia_mes_atual = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                         ultimo_dia_mes_anterior = primeiro_dia_mes_atual - pd.Timedelta(days=1)
                         primeiro_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                        df_filtrado = df_filtrado[(df_filtrado['Data_Hora_Retorno'] >= primeiro_dia_mes_anterior) & (df_filtrado['Data_Hora_Retorno'] <= ultimo_dia_mes_anterior)]
+                        df_filtrado = df_filtrado[(df_filtrado['Data_Hora_Retorno_ts'] >= primeiro_dia_mes_anterior) & (df_filtrado['Data_Hora_Retorno_ts'] <= ultimo_dia_mes_anterior)]
                 
                 if filtro_operador != "Todos":
                     df_filtrado = df_filtrado[df_filtrado['Operador'] == filtro_operador]
@@ -665,31 +668,34 @@ if st.session_state.tela_atual == 'dashboard':
             df_estatisticas['Data_Hora_Retorno'] = pd.to_datetime(df_estatisticas['Data_Retorno'] + ' ' + df_estatisticas['Hora_Retorno'], format='%d/%m/%Y %H:%M', errors='coerce')
             
             if periodo_estatisticas != "Todos":
-                agora = pd.Timestamp.now(FUSO_HORARIO_BRASIL)
-                
                 # Filtrar apenas registros com datas válidas
                 df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'].notna()]
                 
+                # Converter para timestamp para garantir compatibilidade
+                df_estatisticas['Data_Hora_Retirada_ts'] = pd.to_datetime(df_estatisticas['Data_Hora_Retirada'])
+                
+                agora = pd.Timestamp.now(FUSO_HORARIO_BRASIL)
+                
                 if periodo_estatisticas == "Últimos 7 dias":
                     data_limite = agora - pd.Timedelta(days=7)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada_ts'] >= data_limite]
                 elif periodo_estatisticas == "Últimos 30 dias":
                     data_limite = agora - pd.Timedelta(days=30)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada_ts'] >= data_limite]
                 elif periodo_estatisticas == "Últimos 60 dias":
                     data_limite = agora - pd.Timedelta(days=60)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada_ts'] >= data_limite]
                 elif periodo_estatisticas == "Últimos 90 dias":
                     data_limite = agora - pd.Timedelta(days=90)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada_ts'] >= data_limite]
                 elif periodo_estatisticas == "Este Mês":
                     primeiro_dia_mes = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= primeiro_dia_mes]
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada_ts'] >= primeiro_dia_mes]
                 elif periodo_estatisticas == "Mês Anterior":
                     primeiro_dia_mes_atual = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                     ultimo_dia_mes_anterior = primeiro_dia_mes_atual - pd.Timedelta(days=1)
                     primeiro_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                    df_estatisticas = df_estatisticas[(df_estatisticas['Data_Hora_Retirada'] >= primeiro_dia_mes_anterior) & (df_estatisticas['Data_Hora_Retirada'] <= ultimo_dia_mes_anterior)]
+                    df_estatisticas = df_estatisticas[(df_estatisticas['Data_Hora_Retirada_ts'] >= primeiro_dia_mes_anterior) & (df_estatisticas['Data_Hora_Retirada_ts'] <= ultimo_dia_mes_anterior)]
             
             if not df_estatisticas.empty:
                 col1, col2, col3 = st.columns(3)
