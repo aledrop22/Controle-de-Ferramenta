@@ -219,7 +219,17 @@ if st.session_state.tela_atual == 'dashboard':
                     horario_limite = st.session_state[f'prorrogacao_{operador}']
                 
                 # SIMULAÇÃO: Sempre mostrar alerta para teste
+                # Condição real: mostrar apenas 15 min antes do horário limite
                 if True:  # (hora_atual >= horario_limite - 0.25) and (hora_atual < horario_limite):  # 15 min antes
+                    # Verificar se o alerta foi prorrogado recentemente (não mostrar se acabou de prorrogar)
+                    alerta_prorrogado = st.session_state.get(f'alerta_prorrogado_{operador}', False)
+                    if alerta_prorrogado:
+                        # Se foi prorrogado, esconder alerta e resetar flag quando chegar próximo do novo horário
+                        # Resetar flag se estiver 15 min antes do novo horário
+                        if hora_atual >= horario_limite - 0.25:
+                            st.session_state[f'alerta_prorrogado_{operador}'] = False
+                        else:
+                            continue
                     with st.container():
                         st.markdown(f"""
                             <div style="background-color: #FF0000; padding: 30px; border-radius: 10px; border: 5px solid #000000; margin-bottom: 20px;">
@@ -256,6 +266,7 @@ if st.session_state.tela_atual == 'dashboard':
                                         hora_decimal = novo_horario.hour + novo_horario.minute / 60
                                         st.session_state[f'prorrogacao_{operador}'] = hora_decimal
                                         st.session_state[f'mostrar_prorrogacao_{operador}'] = False
+                                        st.session_state[f'alerta_prorrogado_{operador}'] = True  # Marcar que alerta foi prorrogado
                                         st.success(f"Horário prorrogado até {novo_horario.strftime('%H:%M')}")
                                         st.rerun()
                                 
