@@ -594,8 +594,9 @@ if st.session_state.tela_atual == 'dashboard':
                 
                 # Filtro de período
                 if filtro_periodo != "Todos":
-                    agora = datetime.now(FUSO_HORARIO_BRASIL)
+                    agora = pd.Timestamp.now(FUSO_HORARIO_BRASIL)
                     df_filtrado['Data_Hora_Retorno'] = pd.to_datetime(df_filtrado['Data_Retorno'] + ' ' + df_filtrado['Hora_Retorno'], format='%d/%m/%Y %H:%M', errors='coerce')
+                    df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'].notna()]
                     
                     if filtro_periodo == "Hoje":
                         data_limite = agora.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -664,7 +665,7 @@ if st.session_state.tela_atual == 'dashboard':
             df_estatisticas['Data_Hora_Retorno'] = pd.to_datetime(df_estatisticas['Data_Retorno'] + ' ' + df_estatisticas['Hora_Retorno'], format='%d/%m/%Y %H:%M', errors='coerce')
             
             if periodo_estatisticas != "Todos":
-                agora = datetime.now(FUSO_HORARIO_BRASIL)
+                agora = pd.Timestamp.now(FUSO_HORARIO_BRASIL)
                 
                 # Filtrar apenas registros com datas válidas
                 df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'].notna()]
