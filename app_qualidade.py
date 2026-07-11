@@ -305,8 +305,10 @@ if st.session_state.tela_atual == 'dashboard':
                                 else:
                                     st.error("❌ Não foi possível salvar a devolução. Tente novamente.")
                         
-                        # Mostrar botões individuais apenas se houver mais de 1 ferramenta
-                        if len(group) > 1:
+                        # Mostrar botões individuais
+                        # No modo chão de fábrica: sempre mostrar botão de transferência
+                        # No modo qualidade: mostrar apenas se houver mais de 1 ferramenta
+                        if modo_chao_fabrica or len(group) > 1:
                             st.markdown("---")
                             for num, (idx, row) in enumerate(group.iterrows(), 1):
                                 with st.container(border=True):
