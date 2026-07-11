@@ -193,7 +193,7 @@ if st.session_state.tela_atual == 'dashboard':
         """, unsafe_allow_html=True)
         st.session_state.scroll_to_top = False
     if modo_chao_fabrica:
-        st.title("🏭 Ferramentas no Chão de Fábrica")
+        st.title("Dashbord em tempo Real - Chão de Fábrica")
         # Recarregar dados automaticamente no modo chão de fábrica
         st.session_state.df_dados = carregar_dados()
     else:
@@ -331,20 +331,20 @@ if st.session_state.tela_atual == 'dashboard':
                                             st.markdown(f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
                                         with col_btn:
                                             if st.button("Devolver", key=f"dev_{row['ID']}", width='stretch'):
-                                            agora = datetime.now(FUSO_HORARIO_BRASIL)
-                                            # Recarregar dados para garantir sincronização
-                                            st.session_state.df_dados = carregar_dados()
-                                            # Usar ID para garantir atualização correta
-                                            mask = st.session_state.df_dados['ID'] == row['ID']
-                                            if mask.any():
-                                                st.session_state.df_dados.loc[mask, 'Data_Retorno'] = agora.strftime("%d/%m/%Y")
-                                                st.session_state.df_dados.loc[mask, 'Hora_Retorno'] = agora.strftime("%H:%M")
-                                                st.session_state.df_dados.loc[mask, 'Status'] = 'Devolvido'
-                                                st.session_state.df_dados.loc[mask, 'Finalizacao_Esquecimento'] = 'Não'
-                                            if salvar_dados(st.session_state.df_dados):
-                                                st.rerun()
-                                            else:
-                                                st.error("❌ Não foi possível salvar a devolução. Tente novamente.")
+                                                agora = datetime.now(FUSO_HORARIO_BRASIL)
+                                                # Recarregar dados para garantir sincronização
+                                                st.session_state.df_dados = carregar_dados()
+                                                # Usar ID para garantir atualização correta
+                                                mask = st.session_state.df_dados['ID'] == row['ID']
+                                                if mask.any():
+                                                    st.session_state.df_dados.loc[mask, 'Data_Retorno'] = agora.strftime("%d/%m/%Y")
+                                                    st.session_state.df_dados.loc[mask, 'Hora_Retorno'] = agora.strftime("%H:%M")
+                                                    st.session_state.df_dados.loc[mask, 'Status'] = 'Devolvido'
+                                                    st.session_state.df_dados.loc[mask, 'Finalizacao_Esquecimento'] = 'Não'
+                                                if salvar_dados(st.session_state.df_dados):
+                                                    st.rerun()
+                                                else:
+                                                    st.error("❌ Não foi possível salvar a devolução. Tente novamente.")
         else:
             st.info("Nenhuma ferramenta retirada no momento.")
 
