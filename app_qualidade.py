@@ -304,30 +304,33 @@ if st.session_state.tela_atual == 'dashboard':
                                     st.rerun()
                                 else:
                                     st.error("❌ Não foi possível salvar a devolução. Tente novamente.")
-                        st.markdown("---")
-                        for num, (idx, row) in enumerate(group.iterrows(), 1):
-                            with st.container(border=True):
-                                if modo_chao_fabrica:
-                                    col_num, col_tool, col_btn = st.columns([0.3, 5, 1])
-                                    with col_num:
-                                        st.markdown(f"**{num}**")
-                                    with col_tool:
-                                        st.markdown(f"**{row['Instrumento']}** ({row['Especificacao']})")
-                                        st.markdown(f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
-                                    with col_btn:
-                                        if st.button("Transferir", key=f"trans_{row['ID']}", width='stretch'):
-                                            st.session_state.transferencia_ativa = True
-                                            st.session_state.ferramenta_transferencia = row['ID']
-                                            st.rerun()
-                                else:
-                                    col_num, col_tool, col_btn = st.columns([0.3, 5, 1])
-                                    with col_num:
-                                        st.markdown(f"**{num}**")
-                                    with col_tool:
-                                        st.markdown(f"**{row['Instrumento']}** ({row['Especificacao']})")
-                                        st.markdown(f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
-                                    with col_btn:
-                                        if st.button("Devolver", key=f"dev_{row['ID']}", width='stretch'):
+                        
+                        # Mostrar botões individuais apenas se houver mais de 1 ferramenta
+                        if len(group) > 1:
+                            st.markdown("---")
+                            for num, (idx, row) in enumerate(group.iterrows(), 1):
+                                with st.container(border=True):
+                                    if modo_chao_fabrica:
+                                        col_num, col_tool, col_btn = st.columns([0.3, 5, 1])
+                                        with col_num:
+                                            st.markdown(f"**{num}**")
+                                        with col_tool:
+                                            st.markdown(f"**{row['Instrumento']}** ({row['Especificacao']})")
+                                            st.markdown(f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
+                                        with col_btn:
+                                            if st.button("Transferir", key=f"trans_{row['ID']}", width='stretch'):
+                                                st.session_state.transferencia_ativa = True
+                                                st.session_state.ferramenta_transferencia = row['ID']
+                                                st.rerun()
+                                    else:
+                                        col_num, col_tool, col_btn = st.columns([0.3, 5, 1])
+                                        with col_num:
+                                            st.markdown(f"**{num}**")
+                                        with col_tool:
+                                            st.markdown(f"**{row['Instrumento']}** ({row['Especificacao']})")
+                                            st.markdown(f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
+                                        with col_btn:
+                                            if st.button("Devolver", key=f"dev_{row['ID']}", width='stretch'):
                                             agora = datetime.now(FUSO_HORARIO_BRASIL)
                                             # Recarregar dados para garantir sincronização
                                             st.session_state.df_dados = carregar_dados()

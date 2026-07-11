@@ -204,29 +204,32 @@ elif modo_acesso == "Qualidade (Interativo)":
                                     st.rerun()
                                 else:
                                     st.error("❌ Não foi possível salvar a devolução. Tente novamente.")
-                            for num, (idx, row) in enumerate(group.iterrows(), 1):
-                                with st.container(border=True):
-                                    col_num, col_tool, col_btn = st.columns(
-                                        [0.3, 5, 1])
-                                    with col_num:
-                                        st.markdown(f"**{num}**")
-                                    with col_tool:
-                                        st.markdown(
-                                            f"**{row['Instrumento']}** ({row['Especificacao']})")
-                                        st.markdown(
-                                            f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
-                                    with col_btn:
-                                        if st.button("Devolver", key=f"dev_{row['ID']}", width='stretch'):
-                                            agora = datetime.now(
-                                                FUSO_HORARIO_BRASIL)
-                                            st.session_state.df_dados.loc[idx, 'Data_Retorno'] = agora.strftime(
-                                                "%d/%m/%Y")
-                                            st.session_state.df_dados.loc[idx, 'Hora_Retorno'] = agora.strftime(
-                                                "%H:%M")
-                                            st.session_state.df_dados.loc[idx,
-                                                                          'Status'] = 'Devolvido'
-                                            if salvar_dados(st.session_state.df_dados):
-                                                st.rerun()
+                            
+                            # Mostrar botões individuais apenas se houver mais de 1 ferramenta
+                            if len(group) > 1:
+                                for num, (idx, row) in enumerate(group.iterrows(), 1):
+                                    with st.container(border=True):
+                                        col_num, col_tool, col_btn = st.columns(
+                                            [0.3, 5, 1])
+                                        with col_num:
+                                            st.markdown(f"**{num}**")
+                                        with col_tool:
+                                            st.markdown(
+                                                f"**{row['Instrumento']}** ({row['Especificacao']})")
+                                            st.markdown(
+                                                f"📅 {row['Data_Retirada']} às {row['Hora_Retirada']}", help="Data de retirada")
+                                        with col_btn:
+                                            if st.button("Devolver", key=f"dev_{row['ID']}", width='stretch'):
+                                                agora = datetime.now(
+                                                    FUSO_HORARIO_BRASIL)
+                                                st.session_state.df_dados.loc[idx, 'Data_Retorno'] = agora.strftime(
+                                                    "%d/%m/%Y")
+                                                st.session_state.df_dados.loc[idx, 'Hora_Retorno'] = agora.strftime(
+                                                    "%H:%M")
+                                                st.session_state.df_dados.loc[idx,
+                                                                              'Status'] = 'Devolvido'
+                                                if salvar_dados(st.session_state.df_dados):
+                                                    st.rerun()
                                             else:
                                                 st.error(
                                                     "❌ Não foi possível salvar a devolução. Tente novamente.")
