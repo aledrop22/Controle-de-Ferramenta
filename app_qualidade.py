@@ -277,6 +277,11 @@ if st.session_state.tela_atual == 'dashboard':
                                 st.markdown("---")
 
     # Botão de ação e estatísticas na mesma linha
+    # Definir variáveis globais antes dos blocos condicionais
+    df = st.session_state.df_dados
+    df_uso = df[df['Status'] == 'Em Uso']
+    df_devolvidos = df[df['Status'] == 'Devolvido']
+    
     if modo_chao_fabrica:
         # No modo chão de fábrica, mostra botão de atualização
         col_btn, col_stat1, col_stat2 = st.columns([1, 1, 1])
@@ -285,8 +290,6 @@ if st.session_state.tela_atual == 'dashboard':
                 st.session_state.df_dados = carregar_dados()
                 st.rerun()
         with col_stat1:
-            df = st.session_state.df_dados
-            df_uso = df[df['Status'] == 'Em Uso']
             st.markdown("""
                 <div style="background-color: #003366; padding: 20px; border-radius: 10px; border: 2px solid #003366; color: white; text-align: center;">
                     <h3 style="margin:0; font-size: 32px;">""" + str(len(df_uso)) + """</h3>
@@ -294,7 +297,6 @@ if st.session_state.tela_atual == 'dashboard':
                 </div>
             """, unsafe_allow_html=True)
         with col_stat2:
-            df_devolvidos = df[df['Status'] == 'Devolvido']
             devolvidas_hoje = len(df_devolvidos[df_devolvidos['Data_Retorno'] == datetime.now(FUSO_HORARIO_BRASIL).strftime("%d/%m/%Y")])
             st.markdown("""
                 <div style="background-color: #000000; padding: 20px; border-radius: 10px; border: 2px solid #000000; color: white; text-align: center;">
@@ -312,8 +314,6 @@ if st.session_state.tela_atual == 'dashboard':
                 st.session_state.setor_logado = None
                 st.rerun()
         with col_stat1:
-            df = st.session_state.df_dados
-            df_uso = df[df['Status'] == 'Em Uso']
             st.markdown("""
                 <div style="background-color: #003366; padding: 20px; border-radius: 10px; border: 2px solid #003366; color: white; text-align: center;">
                     <h3 style="margin:0; font-size: 32px;">""" + str(len(df_uso)) + """</h3>
@@ -321,7 +321,6 @@ if st.session_state.tela_atual == 'dashboard':
                 </div>
             """, unsafe_allow_html=True)
         with col_stat2:
-            df_devolvidos = df[df['Status'] == 'Devolvido']
             devolvidas_hoje = len(df_devolvidos[df_devolvidos['Data_Retorno'] == datetime.now(FUSO_HORARIO_BRASIL).strftime("%d/%m/%Y")])
             st.markdown("""
                 <div style="background-color: #000000; padding: 20px; border-radius: 10px; border: 2px solid #000000; color: white; text-align: center;">
@@ -580,16 +579,48 @@ if st.session_state.tela_atual == 'dashboard':
 
             if not df_devolvidos.empty:
                 # Filtros
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    filtro_operador = st.selectbox("Filtrar por Operador:", ["Todos"] + sorted(df_devolvidos['Operador'].unique().tolist()), key="filtro_operador")
+                    filtro_periodo = st.selectbox("Período:", ["Todos", "Hoje", "Últimos 7 dias", "Últimos 30 dias", "Últimos 60 dias", "Últimos 90 dias", "Este Mês", "Mês Anterior"], key="filtro_periodo")
                 with col2:
-                    filtro_ferramenta = st.selectbox("Filtrar por Ferramenta:", ["Todas"] + sorted(df_devolvidos['Instrumento'].unique().tolist()), key="filtro_ferramenta")
+                    filtro_operador = st.selectbox("Filtrar por Operador:", ["Todos"] + sorted(df_devolvidos['Operador'].unique().tolist()), key="filtro_operador")
                 with col3:
+                    filtro_ferramenta = st.selectbox("Filtrar por Ferramenta:", ["Todas"] + sorted(df_devolvidos['Instrumento'].unique().tolist()), key="filtro_ferramenta")
+                with col4:
                     filtro_setor = st.selectbox("Filtrar por Setor:", ["Todos"] + sorted(df_devolvidos['Setor'].unique().tolist()), key="filtro_setor")
                 
                 # Aplicar filtros
                 df_filtrado = df_devolvidos.copy()
+                
+                # Filtro de período
+                if filtro_periodo != "Todos":
+                    agora = datetime.now(FUSO_HORARIO_BRASIL)
+                    df_filtrado['Data_Hora_Retorno'] = pd.to_datetime(df_filtrado['Data_Retorno'] + ' ' + df_filtrado['Hora_Retorno'], format='%d/%m/%Y %H:%M', errors='coerce')
+                    
+                    if filtro_periodo == "Hoje":
+                        data_limite = agora.replace(hour=0, minute=0, second=0, microsecond=0)
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                    elif filtro_periodo == "Últimos 7 dias":
+                        data_limite = agora - pd.Timedelta(days=7)
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                    elif filtro_periodo == "Últimos 30 dias":
+                        data_limite = agora - pd.Timedelta(days=30)
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                    elif filtro_periodo == "Últimos 60 dias":
+                        data_limite = agora - pd.Timedelta(days=60)
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                    elif filtro_periodo == "Últimos 90 dias":
+                        data_limite = agora - pd.Timedelta(days=90)
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= data_limite]
+                    elif filtro_periodo == "Este Mês":
+                        primeiro_dia_mes = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                        df_filtrado = df_filtrado[df_filtrado['Data_Hora_Retorno'] >= primeiro_dia_mes]
+                    elif filtro_periodo == "Mês Anterior":
+                        primeiro_dia_mes_atual = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - pd.Timedelta(days=1)
+                        primeiro_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                        df_filtrado = df_filtrado[(df_filtrado['Data_Hora_Retorno'] >= primeiro_dia_mes_anterior) & (df_filtrado['Data_Hora_Retorno'] <= ultimo_dia_mes_anterior)]
+                
                 if filtro_operador != "Todos":
                     df_filtrado = df_filtrado[df_filtrado['Operador'] == filtro_operador]
                 if filtro_ferramenta != "Todas":
@@ -610,6 +641,144 @@ if st.session_state.tela_atual == 'dashboard':
                     st.info("Nenhum resultado encontrado com os filtros selecionados.")
             else:
                 st.info("Nenhuma devolução registrada ainda.")
+
+        # --- ESTATÍSTICAS DE USO POR PERÍODO ---
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("""
+                <div style="background-color: #003366; padding: 15px; border-radius: 5px; color: white; margin-bottom: 15px;">
+                    <h4 style="margin:0; font-size: 18px;">📊 Estatísticas de Uso por Período</h4>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Seleção de período para estatísticas
+            col_periodo = st.columns(1)
+            with col_periodo[0]:
+                periodo_estatisticas = st.selectbox("Selecione o período para análise:", 
+                    ["Últimos 7 dias", "Últimos 30 dias", "Últimos 60 dias", "Últimos 90 dias", "Este Mês", "Mês Anterior", "Todos"],
+                    key="periodo_estatisticas")
+            
+            # Filtrar dados pelo período selecionado
+            df_estatisticas = df.copy()
+            df_estatisticas['Data_Hora_Retirada'] = pd.to_datetime(df_estatisticas['Data_Retirada'] + ' ' + df_estatisticas['Hora_Retirada'], format='%d/%m/%Y %H:%M', errors='coerce')
+            df_estatisticas['Data_Hora_Retorno'] = pd.to_datetime(df_estatisticas['Data_Retorno'] + ' ' + df_estatisticas['Hora_Retorno'], format='%d/%m/%Y %H:%M', errors='coerce')
+            
+            if periodo_estatisticas != "Todos":
+                agora = datetime.now(FUSO_HORARIO_BRASIL)
+                
+                if periodo_estatisticas == "Últimos 7 dias":
+                    data_limite = agora - pd.Timedelta(days=7)
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]  # Apenas retiradas com data
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
+                elif periodo_estatisticas == "Últimos 30 dias":
+                    data_limite = agora - pd.Timedelta(days=30)
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
+                elif periodo_estatisticas == "Últimos 60 dias":
+                    data_limite = agora - pd.Timedelta(days=60)
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
+                elif periodo_estatisticas == "Últimos 90 dias":
+                    data_limite = agora - pd.Timedelta(days=90)
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= data_limite]
+                elif periodo_estatisticas == "Este Mês":
+                    primeiro_dia_mes = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Hora_Retirada'] >= primeiro_dia_mes]
+                elif periodo_estatisticas == "Mês Anterior":
+                    primeiro_dia_mes_atual = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                    ultimo_dia_mes_anterior = primeiro_dia_mes_atual - pd.Timedelta(days=1)
+                    primeiro_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                    df_estatisticas = df_estatisticas[df_estatisticas['Data_Retirada'] != ""]
+                    df_estatisticas = df_estatisticas[(df_estatisticas['Data_Hora_Retirada'] >= primeiro_dia_mes_anterior) & (df_estatisticas['Data_Hora_Retirada'] <= ultimo_dia_mes_anterior)]
+            
+            if not df_estatisticas.empty:
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.markdown("""
+                        <div style="background-color: #003366; padding: 15px; border-radius: 5px; color: white; text-align: center;">
+                            <h3 style="margin:0; font-size: 24px;">""" + str(len(df_estatisticas)) + """</h3>
+                            <p style="margin:5px 0 0 0; font-size: 14px;">Total de Retiradas</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    devolvidas_periodo = len(df_estatisticas[df_estatisticas['Status'] == 'Devolvido'])
+                    st.markdown("""
+                        <div style="background-color: #000000; padding: 15px; border-radius: 5px; color: white; text-align: center;">
+                            <h3 style="margin:0; font-size: 24px;">""" + str(devolvidas_periodo) + """</h3>
+                            <p style="margin:5px 0 0 0; font-size: 14px;">Devolvidas</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                with col3:
+                    em_uso_periodo = len(df_estatisticas[df_estatisticas['Status'] == 'Em Uso'])
+                    st.markdown("""
+                        <div style="background-color: #dc3545; padding: 15px; border-radius: 5px; color: white; text-align: center;">
+                            <h3 style="margin:0; font-size: 24px;">""" + str(em_uso_periodo) + """</h3>
+                            <p style="margin:5px 0 0 0; font-size: 14px;">Em Uso</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown("---")
+                
+                # Operadores que mais usaram
+                col_top_op, col_top_ferr = st.columns(2)
+                
+                with col_top_op:
+                    st.markdown("### 👤 Top Operadores por Uso")
+                    contagem_operadores = df_estatisticas.groupby('Operador').size().reset_index(name='Quantidade')
+                    contagem_operadores = contagem_operadores.sort_values('Quantidade', ascending=False).head(10)
+                    
+                    if not contagem_operadores.empty:
+                        for idx, row in contagem_operadores.iterrows():
+                            st.markdown(f"**{row['Operador']}:** {row['Quantidade']} retirada(s)")
+                    else:
+                        st.info("Nenhum dado disponível")
+                
+                with col_top_ferr:
+                    st.markdown("### 🔧 Top Ferramentas por Uso")
+                    contagem_ferramentas = df_estatisticas.groupby(['Instrumento', 'Especificacao']).size().reset_index(name='Quantidade')
+                    contagem_ferramentas = contagem_ferramentas.sort_values('Quantidade', ascending=False).head(10)
+                    
+                    if not contagem_ferramentas.empty:
+                        for idx, row in contagem_ferramentas.iterrows():
+                            st.markdown(f"**{row['Instrumento']} ({row['Especificacao']}):** {row['Quantidade']} vez(es)")
+                    else:
+                        st.info("Nenhum dado disponível")
+                
+                st.markdown("---")
+                
+                # Estatísticas por Setor
+                st.markdown("### 🏭 Mapa de Calor: Operadores vs Setores")
+                
+                # Criar matriz para heatmap
+                heatmap_data = df_estatisticas.groupby(['Setor', 'Operador']).size().reset_index(name='Quantidade')
+                
+                if not heatmap_data.empty:
+                    # Pivot para criar matriz
+                    heatmap_matrix = heatmap_data.pivot(index='Setor', columns='Operador', values='Quantidade').fillna(0)
+                    
+                    # Criar heatmap
+                    fig_heatmap = px.imshow(
+                        heatmap_matrix,
+                        labels=dict(x="Operador", y="Setor", color="Quantidade"),
+                        x=heatmap_matrix.columns,
+                        y=heatmap_matrix.index,
+                        color_continuous_scale='Purples',
+                        title='Intensidade de Uso por Setor e Operador'
+                    )
+                    fig_heatmap.update_layout(
+                        height=500,
+                        xaxis={'tickangle': -45}
+                    )
+                    st.plotly_chart(fig_heatmap, use_container_width=True)
+                else:
+                    st.info("Nenhum dado disponível")
+            else:
+                st.info("Nenhum dado encontrado para o período selecionado.")
 
 
     # --- GRÁFICO DE FERRAMENTAS POR OPERADOR (APENAS MODO QUALIDADE) ---
