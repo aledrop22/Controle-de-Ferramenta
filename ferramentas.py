@@ -279,7 +279,24 @@ elif modo_acesso == "Qualidade (Interativo)":
 
             if setor_escolhido != "Selecione...":
                 st.write(
-                    f"Operadores do setor: **{setor_escolhido}** (Clique na sua foto)")
+                    f"Operadores do setor: **{setor_escolhido}** (:red[Clique no seu nome])")
+                
+                # Adicionar CSS para botões de seleção de operadores
+                st.markdown("""
+                    <style>
+                        div[data-testid="stButton"] > button[kind="default"] {
+                            background-color: #003366 !important;
+                            color: white !important;
+                            border: 2px solid #003366 !important;
+                            font-weight: bold !important;
+                        }
+                        div[data-testid="stButton"] > button[kind="default"]:hover {
+                            background-color: #004080 !important;
+                            border-color: #004080 !important;
+                        }
+                    </style>
+                """, unsafe_allow_html=True)
+                
                 nomes_setor = setores_operadores[setor_escolhido]
 
                 # Mostra as fotos limitadas a 5 por linha

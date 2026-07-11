@@ -213,7 +213,7 @@ if st.session_state.tela_atual == 'dashboard':
             st.markdown("""
                 <div style="background-color: #003366; padding: 20px; border-radius: 10px; border: 2px solid #003366; color: white; text-align: center;">
                     <h3 style="margin:0; font-size: 32px;">""" + str(len(df_uso)) + """</h3>
-                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🟢 Em Uso</p>
+                    <p style="margin:5px 0 0 0; font-size: 16px;">🟢 Em Uso</p>
                 </div>
             """, unsafe_allow_html=True)
         with col_stat2:
@@ -222,7 +222,7 @@ if st.session_state.tela_atual == 'dashboard':
             st.markdown("""
                 <div style="background-color: #000000; padding: 20px; border-radius: 10px; border: 2px solid #000000; color: white; text-align: center;">
                     <h3 style="margin:0; font-size: 32px;">""" + str(devolvidas_hoje) + """</h3>
-                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🔴 Devolvidas Hoje</p>
+                    <p style="margin:5px 0 0 0; font-size: 16px;">🔴 Devolvidas Hoje</p>
                 </div>
             """, unsafe_allow_html=True)
     else:
@@ -240,7 +240,7 @@ if st.session_state.tela_atual == 'dashboard':
             st.markdown("""
                 <div style="background-color: #003366; padding: 20px; border-radius: 10px; border: 2px solid #003366; color: white; text-align: center;">
                     <h3 style="margin:0; font-size: 32px;">""" + str(len(df_uso)) + """</h3>
-                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🟢 Em Uso</p>
+                    <p style="margin:5px 0 0 0; font-size: 16px;">🟢 Em Uso</p>
                 </div>
             """, unsafe_allow_html=True)
         with col_stat2:
@@ -249,7 +249,7 @@ if st.session_state.tela_atual == 'dashboard':
             st.markdown("""
                 <div style="background-color: #000000; padding: 20px; border-radius: 10px; border: 2px solid #000000; color: white; text-align: center;">
                     <h3 style="margin:0; font-size: 32px;">""" + str(devolvidas_hoje) + """</h3>
-                    <p style="margin:5px 0 0 0; font-size: 16px; opacity: 0.9;">🔴 Devolvidas Hoje</p>
+                    <p style="margin:5px 0 0 0; font-size: 16px;">🔴 Devolvidas Hoje</p>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -530,7 +530,7 @@ elif st.session_state.tela_atual == 'retirada':
         st.markdown(f"""
             <div style="background-color: #003366; padding: 20px; border-radius: 5px; color: white; margin-bottom: 20px;">
                 <h3 style="margin:0;">👤 Passo 2: Qual é o seu nome?</h3>
-                <p style="margin:5px 0 0 0; opacity: 0.9;">Setor: {st.session_state.setor_logado}</p>
+                <p style="margin:5px 0 0 0;">Setor: {st.session_state.setor_logado}</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -544,7 +544,23 @@ elif st.session_state.tela_atual == 'retirada':
         st.markdown("---")
 
         nomes_setor = setores_operadores[st.session_state.setor_logado]
-        st.write(f"Operadores do setor: **{st.session_state.setor_logado}** (Clique na sua foto)")
+        st.write(f"Operadores do setor: **{st.session_state.setor_logado}** (:red[Clique no seu nome])")
+        
+        # Adicionar CSS para botões de seleção de operadores
+        st.markdown("""
+            <style>
+                div[data-testid="stButton"] > button[kind="default"] {
+                    background-color: #003366 !important;
+                    color: white !important;
+                    border: 2px solid #003366 !important;
+                    font-weight: bold !important;
+                }
+                div[data-testid="stButton"] > button[kind="default"]:hover {
+                    background-color: #004080 !important;
+                    border-color: #004080 !important;
+                }
+            </style>
+        """, unsafe_allow_html=True)
 
         # Mostra as fotos em 6 colunas para aproveitar melhor o espaço
         colunas_por_linha = 6
@@ -568,7 +584,7 @@ elif st.session_state.tela_atual == 'retirada':
         st.markdown(f"""
             <div style="background-color: #003366; padding: 20px; border-radius: 5px; color: white; margin-bottom: 20px;">
                 <h3 style="margin:0;">🏭 Passo 3: Onde você vai usar?</h3>
-                <p style="margin:5px 0 0 0; opacity: 0.9;">{st.session_state.operador_logado} - {st.session_state.setor_logado}</p>
+                <p style="margin:5px 0 0 0;">{st.session_state.operador_logado} - {st.session_state.setor_logado}</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -601,7 +617,7 @@ elif st.session_state.tela_atual == 'retirada':
         st.markdown(f"""
             <div style="background-color: #003366; padding: 20px; border-radius: 5px; color: white; margin-bottom: 20px;">
                 <h3 style="margin:0;">🔧 Passo 4: O que você vai retirar?</h3>
-                <p style="margin:5px 0 0 0; opacity: 0.9;">{st.session_state.operador_logado} - {st.session_state.setor_logado} - {st.session_state.maquina_selecionada}</p>
+                <p style="margin:5px 0 0 0;">{st.session_state.operador_logado} - {st.session_state.setor_logado} - {st.session_state.maquina_selecionada}</p>
             </div>
         """, unsafe_allow_html=True)
 
