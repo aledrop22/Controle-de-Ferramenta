@@ -218,9 +218,8 @@ if st.session_state.tela_atual == 'dashboard':
                 if f'prorrogacao_{operador}' in st.session_state:
                     horario_limite = st.session_state[f'prorrogacao_{operador}']
                 
-                # SIMULAÇÃO: Sempre mostrar alerta para teste
                 # Condição real: mostrar apenas 15 min antes do horário limite
-                if True:  # (hora_atual >= horario_limite - 0.25) and (hora_atual < horario_limite):  # 15 min antes
+                if (hora_atual >= horario_limite - 0.25) and (hora_atual < horario_limite):  # 15 min antes
                     # Verificar se o alerta foi prorrogado recentemente (não mostrar se acabou de prorrogar)
                     alerta_prorrogado = st.session_state.get(f'alerta_prorrogado_{operador}', False)
                     if alerta_prorrogado:
