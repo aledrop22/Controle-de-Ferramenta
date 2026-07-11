@@ -190,18 +190,81 @@ if st.session_state.tela_atual == 'dashboard':
     else:
         st.title("📊 Painel de Ferramentas - Qualidade (Interativo)")
 
-    # Alerta antes das 17h (15-10 minutos antes)
-    agora = datetime.now(FUSO_HORARIO_BRASIL)
-    hora_atual = agora.hour + agora.minute / 60
-    # SIMULAÇÃO: Sempre mostrar alerta para teste (comentar linha abaixo e descomentar a original após teste)
-    if True:  # 16.75 <= hora_atual < 17.0:  # 16:45 às 17:00
-        st.markdown("""
-            <div style="background-color: #FF0000; padding: 30px; border-radius: 10px; border: 5px solid #000000; margin-bottom: 20px;">
-                <h2 style="margin:0; color: #FFFF00; font-size: 28px; text-align: center; font-weight: bold;">
-                    ⚠️ ATENÇÃO - Obrigatório Retornar Ferramentas Retiradas da Qualidade
-                </h2>
-            </div>
-        """, unsafe_allow_html=True)
+    # Alerta antes das 17h (15-10 minutos antes) - apenas no modo chão de fábrica
+    if modo_chao_fabrica:
+        df = st.session_state.df_dados
+        df_uso = df[df['Status'] == 'Em Uso']
+        
+        # Agrupar por operador
+        if not df_uso.empty:
+            operadores_ferramentas = df_uso.groupby('Operador').agg({
+                'Instrumento': lambda x: ', '.join(x),
+                'Especificacao': lambda x: ', '.join(x),
+                'Maquina': 'first'
+            }).reset_index()
+            
+            # Verificar horário de alerta (17h ou horário prorrogado)
+            agora = datetime.now(FUSO_HORARIO_BRASIL)
+            hora_atual = agora.hour + agora.minute / 60
+            
+            # Para cada operador, verificar se deve mostrar alerta
+            for _, row in operadores_ferramentas.iterrows():
+                operador = row['Operador']
+                ferramentas = f"{row['Instrumento']} ({row['Especificacao']})"
+                maquina = row['Maquina']
+                
+                # Obter horário de prorrogação do operador (padrão 17h)
+                horario_limite = 17.0  # 17:00
+                if f'prorrogacao_{operador}' in st.session_state:
+                    horario_limite = st.session_state[f'prorrogacao_{operador}']
+                
+                # SIMULAÇÃO: Sempre mostrar alerta para teste
+                if True:  # (hora_atual >= horario_limite - 0.25) and (hora_atual < horario_limite):  # 15 min antes
+                    with st.container():
+                        st.markdown(f"""
+                            <div style="background-color: #FF0000; padding: 30px; border-radius: 10px; border: 5px solid #000000; margin-bottom: 20px;">
+                                <h2 style="margin:0; color: #FFFF00; font-size: 28px; text-align: center; font-weight: bold;">
+                                    ⚠️ ATENÇÃO - Obrigatório Retornar Ferramentas Retiradas da Qualidade
+                                </h2>
+                                <p style="margin:15px 0 0 0; color: #FFFF00; font-size: 18px; text-align: center;">
+                                    <strong>Operador:</strong> {operador} | <strong>Máquina:</strong> {maquina}
+                                </p>
+                                <p style="margin:10px 0 0 0; color: #FFFF00; font-size: 16px; text-align: center;">
+                                    <strong>Ferramentas:</strong> {ferramentas}
+                                </p>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Botão de prorrogação
+                        col1, col2, col3 = st.columns([1, 2, 1])
+                        with col2:
+                            if st.button(f"⏰ Prorrogar Tempo - Horas Extras ({operador})", key=f"prorrogar_{operador}", use_container_width=True):
+                                st.session_state[f'mostrar_prorrogacao_{operador}'] = True
+                                st.rerun()
+                        
+                        # Campo para digitar horário de prorrogação
+                        if st.session_state.get(f'mostrar_prorrogacao_{operador}', False):
+                            with st.container():
+                                st.markdown("---")
+                                st.markdown(f"### ⏰ Prorrogar Horário para {operador}")
+                                novo_horario = st.time_input("Até que horas você vai ficar?", value=datetime.now(FUSO_HORARIO_BRASIL).time(), key=f"tempo_prorrogacao_{operador}")
+                                
+                                col_confirmar, col_cancelar = st.columns([1, 1])
+                                with col_confirmar:
+                                    if st.button("✅ Confirmar Prorrogação", key=f"confirm_prorrogacao_{operador}", use_container_width=True):
+                                        # Converter para formato decimal
+                                        hora_decimal = novo_horario.hour + novo_horario.minute / 60
+                                        st.session_state[f'prorrogacao_{operador}'] = hora_decimal
+                                        st.session_state[f'mostrar_prorrogacao_{operador}'] = False
+                                        st.success(f"Horário prorrogado até {novo_horario.strftime('%H:%M')}")
+                                        st.rerun()
+                                
+                                with col_cancelar:
+                                    if st.button("❌ Cancelar", key=f"cancel_prorrogacao_{operador}", use_container_width=True):
+                                        st.session_state[f'mostrar_prorrogacao_{operador}'] = False
+                                        st.rerun()
+                                
+                                st.markdown("---")
 
     # Botão de ação e estatísticas na mesma linha
     if modo_chao_fabrica:
