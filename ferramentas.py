@@ -350,17 +350,17 @@ elif modo_acesso == "Qualidade (Interativo)":
             
             with col1:
                 st.markdown(f"""
-                    <div style="background-color: #003366; padding: 15px; border-radius: 8px; color: white; text-align: center; border: 2px solid #003366;">
-                        <p style="margin:0; font-size: 12px; opacity: 0.8;">👤 NOME</p>
-                        <h4 style="margin:5px 0 0 0;">{st.session_state.operador_logado}</h4>
+                    <div style="background-color: #003366; padding: 20px; border-radius: 8px; color: white; text-align: center; border: 2px solid #003366; min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                        <p style="margin:0; font-size: 14px; font-weight: bold; opacity: 0.9;">👤 NOME</p>
+                        <h4 style="margin:10px 0 0 0; font-size: 16px;">{st.session_state.operador_logado}</h4>
                     </div>
                 """, unsafe_allow_html=True)
             
             with col2:
                 st.markdown(f"""
-                    <div style="background-color: #003366; padding: 15px; border-radius: 8px; color: white; text-align: center; border: 2px solid #003366;">
-                        <p style="margin:0; font-size: 12px; opacity: 0.8;">🏭 MÁQUINA</p>
-                        <h4 style="margin:5px 0 0 0;">{maquina_selecionada}</h4>
+                    <div style="background-color: #003366; padding: 20px; border-radius: 8px; color: white; text-align: center; border: 2px solid #003366; min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                        <p style="margin:0; font-size: 14px; font-weight: bold; opacity: 0.9;">🏭 MÁQUINA</p>
+                        <h4 style="margin:10px 0 0 0; font-size: 16px;">{maquina_selecionada}</h4>
                     </div>
                 """, unsafe_allow_html=True)
             
@@ -369,11 +369,13 @@ elif modo_acesso == "Qualidade (Interativo)":
                 if len(st.session_state.ferramentas_selecionadas) > 1:
                     ferramenta_text = f"{len(st.session_state.ferramentas_selecionadas)} itens"
                 st.markdown(f"""
-                    <div style="background-color: #003366; padding: 15px; border-radius: 8px; color: white; text-align: center; border: 2px solid #003366;">
-                        <p style="margin:0; font-size: 12px; opacity: 0.8;">🔧 FERRAMENTA</p>
-                        <h4 style="margin:5px 0 0 0; font-size: 14px;">{ferramenta_text}</h4>
+                    <div style="background-color: #003366; padding: 20px; border-radius: 8px; color: white; text-align: center; border: 2px solid #003366; min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                        <p style="margin:0; font-size: 14px; font-weight: bold; opacity: 0.9;">🔧 FERRAMENTA</p>
+                        <h4 style="margin:10px 0 0 0; font-size: 16px;">{ferramenta_text}</h4>
                     </div>
                 """, unsafe_allow_html=True)
+            
+            st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
             
             st.markdown("---")
             
