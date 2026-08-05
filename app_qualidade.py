@@ -601,29 +601,31 @@ if st.session_state.tela_atual == 'dashboard':
                 # Filtro de período
                 if filtro_periodo != "Todos":
                     agora = datetime.now(FUSO_HORARIO_BRASIL)
+                    # Remover timezone para comparação consistente
+                    agora_naive = agora.replace(tzinfo=None)
                     
                     if filtro_periodo == "Hoje":
-                        data_hoje = agora.date()
+                        data_hoje = agora_naive.date()
                         df_filtrado = df_filtrado[df_filtrado['Data_Retorno_dt'].dt.date == data_hoje]
                     elif filtro_periodo == "Últimos 7 dias":
-                        data_limite = agora - pd.Timedelta(days=7)
+                        data_limite = agora_naive - pd.Timedelta(days=7)
                         df_filtrado = df_filtrado[df_filtrado['Data_Retorno_dt'] >= data_limite]
                     elif filtro_periodo == "Últimos 30 dias":
-                        data_limite = agora - pd.Timedelta(days=30)
+                        data_limite = agora_naive - pd.Timedelta(days=30)
                         df_filtrado = df_filtrado[df_filtrado['Data_Retorno_dt'] >= data_limite]
                     elif filtro_periodo == "Últimos 60 dias":
-                        data_limite = agora - pd.Timedelta(days=60)
+                        data_limite = agora_naive - pd.Timedelta(days=60)
                         df_filtrado = df_filtrado[df_filtrado['Data_Retorno_dt'] >= data_limite]
                     elif filtro_periodo == "Últimos 90 dias":
-                        data_limite = agora - pd.Timedelta(days=90)
+                        data_limite = agora_naive - pd.Timedelta(days=90)
                         df_filtrado = df_filtrado[df_filtrado['Data_Retorno_dt'] >= data_limite]
                     elif filtro_periodo == "Este Mês":
                         df_filtrado = df_filtrado[
-                            (df_filtrado['Data_Retorno_dt'].dt.year == agora.year) &
-                            (df_filtrado['Data_Retorno_dt'].dt.month == agora.month)
+                            (df_filtrado['Data_Retorno_dt'].dt.year == agora_naive.year) &
+                            (df_filtrado['Data_Retorno_dt'].dt.month == agora_naive.month)
                         ]
                     elif filtro_periodo == "Mês Anterior":
-                        primeiro_dia_mes_atual = agora.replace(day=1)
+                        primeiro_dia_mes_atual = agora_naive.replace(day=1)
                         ultimo_dia_mes_anterior = primeiro_dia_mes_atual - pd.Timedelta(days=1)
                         primeiro_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1)
                         df_filtrado = df_filtrado[
