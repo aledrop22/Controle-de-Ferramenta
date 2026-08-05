@@ -6,6 +6,7 @@ import pytz
 from filelock import FileLock
 import plotly.express as px
 import time
+import sqlite3
 from dados_comuns import setores_operadores, maquinas_lista, estoque
 
 # --- CONFIGURAÇÃO INICIAL DA PÁGINA ---
@@ -87,36 +88,79 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-ARQUIVO_CSV = 'registro_movimentacao_instrumentos.csv'
-ARQUIVO_LOCK = 'registro_movimentacao_instrumentos.csv.lock'
+ARQUIVO_SQLITE = 'registro_movimentacao_instrumentos.db'
 FUSO_HORARIO_BRASIL = pytz.timezone('America/Sao_Paulo')
 
-# --- 1. FUNÇÕES DE BANCO DE DADOS (CSV) ---
+# --- 1. FUNÇÕES DE BANCO DE DADOS (SQLite) ---
+def inicializar_banco():
+    conn = sqlite3.connect(ARQUIVO_SQLITE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS movimentacoes (
+            ID TEXT PRIMARY KEY,
+            Instrumento TEXT,
+            Especificacao TEXT,
+            Operador TEXT,
+            Setor TEXT,
+            Maquina TEXT,
+            Data_Retirada TEXT,
+            Hora_Retirada TEXT,
+            Data_Retorno TEXT,
+            Hora_Retorno TEXT,
+            Status TEXT,
+            Finalizacao_Esquecimento TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
 def carregar_dados():
-    if os.path.exists(ARQUIVO_CSV):
-        df = pd.read_csv(ARQUIVO_CSV, sep=';', encoding='utf-8-sig', dtype=str).fillna("")
-        # Se o CSV antigo não tiver a coluna 'Setor', nós adicionamos para não dar erro
-        if 'Setor' not in df.columns:
-            df.insert(4, 'Setor', 'Não Informado')
-        # Se o CSV antigo não tiver a coluna 'Finalizacao_Esquecimento', nós adicionamos para não dar erro
-        if 'Finalizacao_Esquecimento' not in df.columns:
-            df['Finalizacao_Esquecimento'] = 'Não'
-        
-        # REMOVIDO: Reset automático no 1º dia do mês
-        # Isso estava causando problemas onde ferramentas eram marcadas como devolvidas automaticamente
-        
-        return df
-    else:
+    inicializar_banco()
+    conn = sqlite3.connect(ARQUIVO_SQLITE)
+    df = pd.read_sql_query("SELECT * FROM movimentacoes", conn)
+    conn.close()
+    
+    if df.empty:
         return pd.DataFrame(columns=['ID', 'Instrumento', 'Especificacao', 'Operador', 'Setor', 'Maquina', 'Data_Retirada', 'Hora_Retirada', 'Data_Retorno', 'Hora_Retorno', 'Status', 'Finalizacao_Esquecimento'])
+    
+    # Preencher valores vazios com string vazia
+    df = df.fillna("")
+    return df
 
 def salvar_dados(df):
     try:
-        # Usa file lock para evitar conflitos de escrita
-        with FileLock(ARQUIVO_LOCK, timeout=10):
-            df.to_csv(ARQUIVO_CSV, index=False, sep=';', encoding='utf-8-sig')
+        inicializar_banco()
+        conn = sqlite3.connect(ARQUIVO_SQLITE)
+        cursor = conn.cursor()
+        
+        # Limpar tabela existente
+        cursor.execute("DELETE FROM movimentacoes")
+        
+        # Inserir dados do DataFrame
+        for _, row in df.iterrows():
+            cursor.execute('''
+                INSERT INTO movimentacoes (ID, Instrumento, Especificacao, Operador, Setor, Maquina, Data_Retirada, Hora_Retirada, Data_Retorno, Hora_Retorno, Status, Finalizacao_Esquecimento)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                str(row['ID']),
+                str(row['Instrumento']),
+                str(row['Especificacao']),
+                str(row['Operador']),
+                str(row['Setor']),
+                str(row['Maquina']),
+                str(row['Data_Retirada']),
+                str(row['Hora_Retirada']),
+                str(row['Data_Retorno']),
+                str(row['Hora_Retorno']),
+                str(row['Status']),
+                str(row['Finalizacao_Esquecimento'])
+            ))
+        
+        conn.commit()
+        conn.close()
         return True
     except Exception as e:
-        st.error(f"❌ Erro ao salvar dados no CSV: {str(e)}")
+        st.error(f"❌ Erro ao salvar dados no SQLite: {str(e)}")
         return False
 
 # Inicialização de variáveis de sessão
