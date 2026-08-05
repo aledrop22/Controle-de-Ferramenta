@@ -776,6 +776,41 @@ if st.session_state.tela_atual == 'dashboard':
             else:
                 st.info("Nenhum dado encontrado para o período selecionado.")
 
+        # --- INTERFACE ADMINISTRATIVA: ACESSO AO BANCO DE DADOS ---
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("""
+                <div style="background-color: #660066; padding: 15px; border-radius: 5px; color: white; margin-bottom: 15px;">
+                    <h4 style="margin:0; font-size: 18px;">🔧 Administração do Banco de Dados</h4>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            col_exp, col_info = st.columns([1, 3])
+            with col_exp:
+                if st.button("📥 Exportar Dados (CSV)", type="primary", use_container_width=True):
+                    df_export = st.session_state.df_dados.copy()
+                    csv_data = df_export.to_csv(index=False, sep=';', encoding='utf-8-sig')
+                    st.download_button(
+                        label="⬇️ Baixar CSV",
+                        data=csv_data,
+                        file_name=f"registro_movimentacao_{datetime.now(FUSO_HORARIO_BRASIL).strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+            
+            with col_info:
+                st.info(f"""
+                    **Total de registros:** {len(st.session_state.df_dados)}
+                    
+                    **Em Uso:** {len(st.session_state.df_dados[st.session_state.df_dados['Status'] == 'Em Uso'])}
+                    
+                    **Devolvidos:** {len(st.session_state.df_dados[st.session_state.df_dados['Status'] == 'Devolvido'])}
+                """)
+            
+            # Opção para visualizar todos os dados
+            with st.expander("👁️ Visualizar todos os dados brutos"):
+                st.dataframe(st.session_state.df_dados, hide_index=True, use_container_width=True)
+
 elif st.session_state.tela_atual == 'retirada':
     # --- TELA 2: FLUXO DE RETIRADA ---
     col_titulo, col_voltar = st.columns([8, 2])
