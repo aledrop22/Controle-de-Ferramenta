@@ -592,7 +592,11 @@ if st.session_state.tela_atual == 'dashboard':
                 df_filtrado = df_devolvidos.copy()
                 
                 # Converter 'Data_Retorno' para datetime para comparações corretas
-                df_filtrado['Data_Retorno_dt'] = pd.to_datetime(df_filtrado['Data_Retorno'], format='%d/%m/%Y')
+                # errors='coerce' converte datas inválidas para NaT (Not a Time)
+                df_filtrado['Data_Retorno_dt'] = pd.to_datetime(df_filtrado['Data_Retorno'], format='%d/%m/%Y', errors='coerce')
+                
+                # Remover linhas com datas inválidas (NaT)
+                df_filtrado = df_filtrado[df_filtrado['Data_Retorno_dt'].notna()]
                 
                 # Filtro de período
                 if filtro_periodo != "Todos":
@@ -713,6 +717,14 @@ if st.session_state.tela_atual == 'dashboard':
                 fig_heatmap.update_layout(
                     height=500,
                     xaxis={'tickangle': -45}
+                )
+                # Configurar eixo de cor para mostrar apenas números inteiros
+                fig_heatmap.update_coloraxes(
+                    colorbar=dict(
+                        tickmode='linear',
+                        tick0=0,
+                        dtick=1
+                    )
                 )
                 st.plotly_chart(fig_heatmap, use_container_width=True)
             else:
