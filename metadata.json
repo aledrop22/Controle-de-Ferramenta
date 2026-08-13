@@ -1,0 +1,6 @@
+{
+  "name": "Painel de Ferramentas - Qualidade",
+  "description": "Painel interativo para controle de entrada, saída, histórico e mapa de calor de ferramentas com visual moderno e intuitivo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
