@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Operator, ToolWithdrawal } from '../types';
 import { X, ArrowRightLeft, User, Building2, Cpu, CheckCircle2, AlertCircle } from 'lucide-react';
 
+const USINAGEM_MACHINES = [
+  'GL 01', 'GL 02', 'CNC 01', 'CNC 02', 'CNC 30', 'CNC 35',
+  'FRESA 01', 'FRESA 02', 'TORNO 01', 'TORNO 02', 'TORNO 03'
+];
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -26,10 +31,10 @@ export const TransferModal: React.FC<Props> = ({
   sectors,
   onConfirmTransfer
 }) => {
-  if (!isOpen || !item) return null;
-
   // Filter out the operator who currently holds the tool
-  const availableOperators = operators.filter((o) => o.id !== item.operatorId);
+  const availableOperators = item
+    ? operators.filter((o) => o.id !== item.operatorId)
+    : operators;
   const defaultTargetOp = availableOperators[0] || operators[0];
 
   const [selectedOperatorId, setSelectedOperatorId] = useState<string>(defaultTargetOp?.id || '');
@@ -38,14 +43,21 @@ export const TransferModal: React.FC<Props> = ({
   const [transferNotes, setTransferNotes] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Whenever modal opens or item changes, select default target operator
+  const usinagemMachines = Array.from(new Set([
+    ...USINAGEM_MACHINES,
+    ...operators.filter((operator) => operator.sector === 'Usinagem').map((operator) => operator.machine)
+  ])).filter(Boolean);
+
+  // Whenever the modal opens or the item changes, select the first valid destination.
   useEffect(() => {
     if (defaultTargetOp) {
       setSelectedOperatorId(defaultTargetOp.id);
       setSelectedSector(defaultTargetOp.sector);
       setMachineInput(defaultTargetOp.machine);
     }
-  }, [item]);
+    setTransferNotes('');
+    setErrorMsg('');
+  }, [item?.id, defaultTargetOp?.id]);
 
   // When operator selection changes, AUTOMATICALLY update sector and machine
   const handleOperatorChange = (opId: string) => {
@@ -54,6 +66,18 @@ export const TransferModal: React.FC<Props> = ({
     if (targetOp) {
       setSelectedSector(targetOp.sector);
       setMachineInput(targetOp.machine);
+    }
+  };
+
+  const handleSectorChange = (sector: string) => {
+    setSelectedSector(sector);
+    const firstOperator = availableOperators.find((operator) => operator.sector === sector);
+    if (firstOperator) {
+      setSelectedOperatorId(firstOperator.id);
+      setMachineInput(firstOperator.machine);
+    } else {
+      setSelectedOperatorId('');
+      setMachineInput(sector);
     }
   };
 
@@ -105,10 +129,12 @@ export const TransferModal: React.FC<Props> = ({
   const targetOp = operators.find((o) => o.id === selectedOperatorId);
   const showMachineTag = targetOp ? !isGenericMachine(selectedSector, machineInput) : false;
 
+  if (!isOpen || !item) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl relative">
-        
+
         {/* Header */}
         <div className="bg-slate-800/90 px-6 py-4 border-b border-slate-700/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -162,24 +188,55 @@ export const TransferModal: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Target Operator Selector with Auto Recognition */}
+          {/* Target Sector and Operator Cards */}
           <div className="space-y-3">
             <label className="block text-xs font-bold text-white flex items-center gap-1.5">
-              <User className="w-4 h-4 text-amber-400" />
-              Selecione o Novo Operador (Reconhecimento Automático):
+              <Building2 className="w-4 h-4 text-amber-400" />
+              1. Selecione o Setor de Destino
             </label>
 
-            <select
-              value={selectedOperatorId}
-              onChange={(e) => handleOperatorChange(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:ring-2 focus:ring-amber-500 focus:outline-none cursor-pointer"
-            >
-              {operators.map((op) => (
-                <option key={op.id} value={op.id}>
-                  {op.name} — {op.sector} {op.machine && op.machine !== op.sector ? `(${op.machine})` : ''}
-                </option>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {sectors.map((sector) => (
+                <button
+                  type="button"
+                  key={sector}
+                  onClick={() => handleSectorChange(sector)}
+                  className={`min-h-11 px-3 py-2 rounded-lg border text-xs font-semibold text-left transition-colors ${selectedSector === sector
+                      ? 'bg-amber-600 text-white border-amber-500'
+                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                    }`}
+                >
+                  <Building2 className="w-3.5 h-3.5 inline mr-1.5" />
+                  {sector}
+                </button>
               ))}
-            </select>
+            </div>
+
+            <label className="block text-xs font-bold text-white flex items-center gap-1.5 pt-2">
+              <User className="w-4 h-4 text-amber-400" />
+              2. Selecione o Novo Operador
+            </label>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto pr-1">
+              {availableOperators.filter((operator) => operator.sector === selectedSector).map((operator) => (
+                <button
+                  type="button"
+                  key={operator.id}
+                  onClick={() => handleOperatorChange(operator.id)}
+                  className={`min-h-14 px-3 py-2 rounded-lg border text-left transition-colors ${selectedOperatorId === operator.id
+                      ? 'bg-amber-600 text-white border-amber-500'
+                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                    }`}
+                >
+                  <span className="block text-xs font-semibold truncate">{operator.name}</span>
+                  <span className="block text-[10px] opacity-75 truncate">{operator.machine}</span>
+                </button>
+              ))}
+            </div>
+
+            {availableOperators.filter((operator) => operator.sector === selectedSector).length === 0 && (
+              <p className="text-xs text-rose-300">Nenhum operador disponível neste setor.</p>
+            )}
 
             {/* Auto-Recognized Sector and Machine Preview */}
             <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-500/20 text-xs text-slate-200 flex items-center justify-between flex-wrap gap-2">
@@ -197,6 +254,30 @@ export const TransferModal: React.FC<Props> = ({
                 )}
               </div>
             </div>
+
+            {selectedSector === 'Usinagem' && selectedOperatorId && (
+              <div className="space-y-2 pt-1">
+                <label className="block text-xs font-bold text-white flex items-center gap-1.5">
+                  <Cpu className="w-4 h-4 text-amber-400" />
+                  3. Selecione a Máquina de Destino
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto pr-1">
+                  {usinagemMachines.map((machine) => (
+                    <button
+                      type="button"
+                      key={machine}
+                      onClick={() => setMachineInput(machine)}
+                      className={`min-h-10 px-2.5 py-2 rounded-lg border text-xs font-mono font-semibold transition-colors ${machineInput === machine
+                          ? 'bg-amber-600 text-white border-amber-500'
+                          : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                        }`}
+                    >
+                      {machine}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Transfer Reason / Notes */}
