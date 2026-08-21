@@ -132,7 +132,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
 
   return (
     <div className="space-y-6 animate-fadeIn pb-8">
-      
+
       {/* Page Title & Status Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
         <div>
@@ -175,16 +175,15 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
 
       {/* Sector Filter Tabs & Refresh Button */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-xl flex items-center justify-between gap-3">
-        
+
         {/* Sector Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
           <button
             onClick={() => setSelectedSector('Todos')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
-              selectedSector === 'Todos'
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${selectedSector === 'Todos'
                 ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-950'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-            }`}
+              }`}
           >
             Todos ({activeWithdrawals.length})
           </button>
@@ -197,17 +196,15 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
               <button
                 key={sector}
                 onClick={() => setSelectedSector(sector)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${
-                  isSelected
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${isSelected
                     ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-950'
                     : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                }`}
+                  }`}
               >
                 <span>{sector}</span>
                 {count > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                    isSelected ? 'bg-white text-indigo-700' : 'bg-slate-700 text-indigo-300'
-                  }`}>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isSelected ? 'bg-white text-indigo-700' : 'bg-slate-700 text-indigo-300'
+                    }`}>
                     {count}
                   </span>
                 )}
@@ -261,7 +258,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                 {/* Operator Header Block */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
                   <div className="flex items-center gap-3">
-                    
+
                     {/* Photo / Avatar Box */}
                     <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden shrink-0 flex items-center justify-center shadow-md">
                       {group.avatarUrl ? (
@@ -281,15 +278,15 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                     {/* Operator Name & Sector / Machine Badges */}
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-base font-extrabold text-white">
-                          👤 {group.operatorName}
+                        <span className="text-base font-extrabold text-white flex items-center gap-1.5">
+                          <User className="w-4 h-4 text-indigo-300" /> {group.operatorName}
                         </span>
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
                           ({group.sector})
                         </span>
                         {showMachine && (
-                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                            ⚙️ {group.machine}
+                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1">
+                            <Cpu className="w-3 h-3" /> {group.machine}
                           </span>
                         )}
                       </div>
@@ -307,11 +304,10 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                   {group.items.map((item, index) => (
                     <div
                       key={item.id}
-                      className={`bg-slate-950/80 border rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
-                        item.isOvertime
+                      className={`bg-slate-950/80 border rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${item.isOvertime
                           ? 'border-emerald-500/40 bg-gradient-to-r from-slate-950 to-emerald-950/20'
                           : 'border-slate-800/90 hover:border-slate-700'
-                      }`}
+                        }`}
                     >
                       {/* Left: Index badge + Tool Info */}
                       <div className="flex items-start gap-3">
@@ -342,15 +338,15 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                               {formatDateTime(item.dateRetirada)}
                             </span>
                             <span className="text-slate-600">•</span>
-                            <span className="text-amber-300 font-medium">
-                              🕒 {getElapsedTimeText(item.dateRetirada)}
+                            <span className="text-amber-300 font-medium flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" /> {getElapsedTimeText(item.dateRetirada)}
                             </span>
                           </div>
 
                           {/* Transfer Origin Note if transferred */}
                           {item.transferredFrom && (
                             <div className="text-[11px] font-medium text-amber-400 bg-amber-950/40 border border-amber-500/30 rounded px-2 py-0.5 inline-block mt-1">
-                              🔄 Transferido de: {item.transferredFrom}
+                              <ArrowRightLeft className="w-3 h-3 inline mr-1" /> Transferido de: {item.transferredFrom}
                             </div>
                           )}
                         </div>
@@ -358,7 +354,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
 
                       {/* Right: Transfer Button */}
                       <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                        
+
                         {/* Extend Overtime Toggle */}
                         {!item.isOvertime && (
                           <button

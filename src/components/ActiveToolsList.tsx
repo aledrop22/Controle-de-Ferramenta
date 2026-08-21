@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ToolWithdrawal, ButtonStyleVariant } from '../types';
 import { getActionButtonStyle } from '../utils/buttonStyles';
-import { RotateCcw, Clock, Calendar, CheckCircle2, UserCheck, ChevronDown, ChevronUp, Sparkles, Inbox } from 'lucide-react';
+import { RotateCcw, Clock, Calendar, CheckCircle2, UserCheck, ChevronDown, ChevronUp, Sparkles, Inbox, Cpu } from 'lucide-react';
 
 interface Props {
   withdrawals: ToolWithdrawal[];
@@ -99,7 +99,7 @@ export const ActiveToolsList: React.FC<Props> = ({
 
   return (
     <section className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl mb-6">
-      
+
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800">
         <div className="flex items-center gap-3">
@@ -184,7 +184,7 @@ export const ActiveToolsList: React.FC<Props> = ({
                         </span>
                         {shouldShowMachineBadge(group.sector, group.machine) && (
                           <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-700 text-slate-300 border border-slate-600">
-                            ⚙️ {group.machine}
+                            <Cpu className="w-3 h-3 inline mr-1" />{group.machine}
                           </span>
                         )}
                       </div>

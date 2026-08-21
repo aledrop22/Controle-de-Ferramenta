@@ -106,7 +106,7 @@ export default function App() {
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isCollaboratorsModalOpen, setIsCollaboratorsModalOpen] = useState<boolean>(false);
-  
+
   // Transfer Modal State
   const [transferItem, setTransferItem] = useState<ToolWithdrawal | null>(null);
 
@@ -118,14 +118,14 @@ export default function App() {
   // Auto-refresh data for Qualidade dashboard (every 5 minutes)
   useEffect(() => {
     if (viewMode !== 'qualidade') return;
-    
+
     const refreshInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
-    
+
     const intervalId = setInterval(() => {
       // Reload data from localStorage to sync with other instances
       const savedWithdrawals = localStorage.getItem('painel_ferramentas_withdrawals');
       const savedOperators = localStorage.getItem('painel_ferramentas_operators');
-      
+
       if (savedWithdrawals) {
         try {
           setWithdrawals(JSON.parse(savedWithdrawals));
@@ -133,7 +133,7 @@ export default function App() {
           console.error('Erro ao recarregar dados de retiradas', e);
         }
       }
-      
+
       if (savedOperators) {
         try {
           setOperators(JSON.parse(savedOperators));
@@ -180,10 +180,10 @@ export default function App() {
       prev.map((item) =>
         item.id === id
           ? {
-              ...item,
-              status: 'returned',
-              dateDevolucao: nowISO
-            }
+            ...item,
+            status: 'returned',
+            dateDevolucao: nowISO
+          }
           : item
       )
     );
@@ -196,10 +196,10 @@ export default function App() {
       prev.map((item) =>
         item.operatorId === operatorId && item.status === 'active'
           ? {
-              ...item,
-              status: 'returned',
-              dateDevolucao: nowISO
-            }
+            ...item,
+            status: 'returned',
+            dateDevolucao: nowISO
+          }
           : item
       )
     );
@@ -276,10 +276,10 @@ export default function App() {
       prev.map((item) =>
         item.id === withdrawalId
           ? {
-              ...item,
-              isOvertime: true,
-              overtimeUntil: '19:00'
-            }
+            ...item,
+            isOvertime: true,
+            overtimeUntil: '19:00'
+          }
           : item
       )
     );
@@ -301,7 +301,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white pb-12">
-      
+
       {/* Header */}
       <Header
         buttonStyle={buttonStyle}
@@ -391,6 +391,7 @@ export default function App() {
         onClose={() => setIsModalOpen(false)}
         operators={operators}
         tools={tools}
+        withdrawals={withdrawals}
         sectors={sectors}
         buttonStyle={buttonStyle}
         onSubmit={handleCreateWithdrawal}

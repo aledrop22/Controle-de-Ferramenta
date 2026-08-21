@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Operator, ToolItem, ButtonStyleVariant } from '../types';
+import { Operator, ToolItem, ToolWithdrawal, ButtonStyleVariant } from '../types';
 import { ESTOQUE_CATEGORIES } from '../data/mockData';
 import { getPrimaryButtonStyle } from '../utils/buttonStyles';
 import {
@@ -30,6 +30,7 @@ interface Props {
   onClose: () => void;
   operators: Operator[];
   tools: ToolItem[];
+  withdrawals: ToolWithdrawal[];
   sectors: string[];
   buttonStyle: ButtonStyleVariant;
   onSubmit: (withdrawals: Array<{
@@ -48,12 +49,11 @@ export const NewWithdrawalModal: React.FC<Props> = ({
   isOpen,
   onClose,
   operators,
+  withdrawals,
   sectors,
   buttonStyle,
   onSubmit
 }) => {
-  if (!isOpen) return null;
-
   // Selected Operator State
   const defaultOp = operators[0];
   const [selectedOperatorId, setSelectedOperatorId] = useState<string>(defaultOp?.id || '');
@@ -70,6 +70,12 @@ export const NewWithdrawalModal: React.FC<Props> = ({
   const [customToolInput, setCustomToolInput] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
+
+  const activeToolKeys = new Set(
+    withdrawals
+      .filter((withdrawal) => withdrawal.status === 'active')
+      .map((withdrawal) => `${withdrawal.toolName}::${withdrawal.spec}`)
+  );
 
   // Auto-fill sector and machine when operator changes
   useEffect(() => {
@@ -92,6 +98,7 @@ export const NewWithdrawalModal: React.FC<Props> = ({
   // Toggle tool item in batch
   const handleToggleToolItem = (category: string, spec: string) => {
     const itemKey = `${category}::${spec}`;
+    if (activeToolKeys.has(itemKey)) return;
     const exists = selectedBatch.some((b) => `${b.category}::${b.spec}` === itemKey);
 
     if (exists) {
@@ -141,6 +148,12 @@ export const NewWithdrawalModal: React.FC<Props> = ({
       return;
     }
 
+    const unavailableItem = selectedBatch.find((item) => activeToolKeys.has(`${item.category}::${item.spec}`));
+    if (unavailableItem) {
+      setErrorMsg(`${unavailableItem.category} (${unavailableItem.spec}) já está em uso.`);
+      return;
+    }
+
     const foundOperator = operators.find((o) => o.id === selectedOperatorId);
     const operatorName = foundOperator ? foundOperator.name : 'Operador';
 
@@ -161,10 +174,12 @@ export const NewWithdrawalModal: React.FC<Props> = ({
 
   const currentOp = operators.find((o) => o.id === selectedOperatorId) || defaultOp;
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl relative">
-        
+
         {/* Modal Header */}
         <div className="bg-slate-800/80 px-6 py-4 border-b border-slate-700/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -194,7 +209,7 @@ export const NewWithdrawalModal: React.FC<Props> = ({
 
         {/* Modal Content */}
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5">
-          
+
           {errorMsg && (
             <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
@@ -209,7 +224,7 @@ export const NewWithdrawalModal: React.FC<Props> = ({
                 <User className="w-4 h-4 text-indigo-400" />
                 1. Selecione o Operador Responsável
               </label>
-              
+
               <button
                 type="button"
                 onClick={() => setShowOverrideSectorMachine(!showOverrideSectorMachine)}
@@ -308,11 +323,10 @@ export const NewWithdrawalModal: React.FC<Props> = ({
                     type="button"
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 border shrink-0 ${
-                      isActive
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 border shrink-0 ${isActive
                         ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-950/40'
                         : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                    }`}
+                      }`}
                   >
                     <span>{cat}</span>
                     {countInCat > 0 && (
@@ -342,20 +356,25 @@ export const NewWithdrawalModal: React.FC<Props> = ({
                 {ESTOQUE_CATEGORIES[activeCategory]?.map((spec) => {
                   const itemKey = `${activeCategory}::${spec}`;
                   const isSelected = selectedBatch.some((b) => `${b.category}::${b.spec}` === itemKey);
+                  const isUnavailable = activeToolKeys.has(itemKey);
 
                   return (
                     <button
                       type="button"
                       key={spec}
                       onClick={() => handleToggleToolItem(activeCategory, spec)}
-                      className={`px-2.5 py-2 rounded-lg text-xs font-mono font-medium transition-all text-left flex items-center justify-between border ${
-                        isSelected
+                      disabled={isUnavailable}
+                      className={`px-2.5 py-2 rounded-lg text-xs font-mono font-medium transition-all text-left flex items-center justify-between border ${isSelected
                           ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/80 ring-1 ring-emerald-500/30'
-                          : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
-                      }`}
+                          : isUnavailable
+                            ? 'bg-slate-900/60 text-slate-600 border-slate-800 cursor-not-allowed'
+                            : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
+                        }`}
                     >
                       <span className="truncate">{spec}</span>
-                      {isSelected ? (
+                      {isUnavailable ? (
+                        <span className="text-[10px] uppercase font-bold">Em uso</span>
+                      ) : isSelected ? (
                         <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-1" />
                       ) : (
                         <Plus className="w-3 h-3 text-slate-500 shrink-0 ml-1 opacity-0 hover:opacity-100" />
@@ -467,11 +486,10 @@ export const NewWithdrawalModal: React.FC<Props> = ({
               <button
                 type="submit"
                 disabled={selectedBatch.length === 0}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${
-                  selectedBatch.length === 0
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${selectedBatch.length === 0
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                     : getPrimaryButtonStyle(buttonStyle)
-                }`}
+                  }`}
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Confirmar Retirada ({selectedBatch.length})</span>
