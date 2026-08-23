@@ -42,11 +42,11 @@ export const Header: React.FC<Props> = ({
           {/* App Title & Status */}
           <div className="flex items-center justify-between lg:justify-start gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-32 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-slate-950/30 border border-slate-300/40 overflow-hidden">
+              <div className="w-36 h-12 flex items-center justify-center overflow-hidden shrink-0">
                 <img
-                  src="/assets/logo-mectrol-completo.jfif"
+                  src="/assets/logo-mectrol-completo.png"
                   alt="Mectrol"
-                  className="max-w-[116px] max-h-[34px] object-contain"
+                  className="w-full h-full object-contain"
                 />
               </div>
               <div>
