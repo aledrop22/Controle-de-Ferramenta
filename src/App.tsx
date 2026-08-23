@@ -318,8 +318,6 @@ export default function App() {
         onResetData={handleResetData}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        activeCount={activeCount}
-        totalToday={totalToday}
         totalOperatorsCount={operators.length}
       />
 
