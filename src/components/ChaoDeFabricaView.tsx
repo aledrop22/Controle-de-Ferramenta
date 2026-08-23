@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ToolWithdrawal, Operator, ButtonStyleVariant } from '../types';
 import {
   Clock,
@@ -43,6 +43,8 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
   const [selectedSector, setSelectedSector] = useState<string>('Todos');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const lastAlertStageRef = useRef<string>('');
 
   const activeWithdrawals = withdrawals.filter((w) => w.status === 'active');
   const pendingReturnCount = activeWithdrawals.filter((item) => !item.isOvertime).length;
@@ -63,6 +65,82 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
     : minutesUntilDeadline <= 10
       ? `Atenção: faltam ${minutesUntilDeadline} minuto(s) para as 17h. Devolva ${pendingReturnCount === 1 ? 'a ferramenta' : 'as ferramentas'} ou clique em Horas Extras.`
       : `Aviso: faltam ${minutesUntilDeadline} minutos para as 17h. Organize a devolução ${pendingReturnCount === 1 ? 'da ferramenta' : 'das ferramentas'} ou utilize Horas Extras.`;
+
+  const alertStage = pendingReturnCount === 0
+    ? 'clear'
+    : isAfterShift
+      ? 'after-shift'
+      : minutesUntilDeadline <= 10
+        ? 'ten-minutes'
+        : minutesUntilDeadline <= 20
+          ? 'twenty-minutes'
+          : 'normal';
+
+  useEffect(() => {
+    const activateAlerts = () => {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+        void audioContextRef.current.resume();
+      }
+      if ('Notification' in window && Notification.permission === 'default') {
+        void Notification.requestPermission();
+      }
+      window.removeEventListener('pointerdown', activateAlerts);
+    };
+
+    window.addEventListener('pointerdown', activateAlerts);
+    return () => window.removeEventListener('pointerdown', activateAlerts);
+  }, []);
+
+  useEffect(() => {
+    if (!showTimeAlert || alertStage === 'clear' || lastAlertStageRef.current === alertStage) return;
+
+    lastAlertStageRef.current = alertStage;
+    const alertTitle = isAfterShift ? 'Prazo de devolução encerrado' : 'Devolução de ferramenta';
+
+    if (document.visibilityState === 'hidden' && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification(alertTitle, {
+        body: timeAlertMessage,
+        tag: `tool-return-${alertStage}`,
+        requireInteraction: true
+      });
+    }
+
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = isAfterShift ? 880 : 660;
+    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.22, audioContext.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.35);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.4);
+  }, [alertStage, isAfterShift, showTimeAlert, timeAlertMessage]);
+
+  useEffect(() => {
+    if (!showTimeAlert) return;
+
+    const originalTitle = document.title;
+    let showAlertTitle = true;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') {
+        document.title = showAlertTitle ? `⚠️ ${isAfterShift ? 'Devolução pendente' : 'Atenção: devolução'}` : originalTitle;
+        showAlertTitle = !showAlertTitle;
+      }
+    }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+      document.title = originalTitle;
+    };
+  }, [isAfterShift, showTimeAlert]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
