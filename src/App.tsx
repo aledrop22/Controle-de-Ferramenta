@@ -68,6 +68,7 @@ export default function App() {
 
   // Persistence state for withdrawals (v4)
   const [withdrawals, setWithdrawals] = useState<ToolWithdrawal[]>(() => {
+    if (isSupabaseConfigured) return [];
     const saved = localStorage.getItem('painel_ferramentas_withdrawals_v4');
     if (saved) {
       try {
@@ -104,7 +105,7 @@ export default function App() {
     loadDatabase()
       .then((data) => {
         if (data) {
-          setOperators(data.operators);
+          if (data.operators.length > 0) setOperators(data.operators);
           setWithdrawals(data.withdrawals);
           if (data.tools.length > 0) setTools(data.tools);
         }
