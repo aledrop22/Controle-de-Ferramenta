@@ -1,7 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Operator, ToolWithdrawal } from '../types';
-
-type WithdrawalRow = ToolWithdrawal;
+import { Operator, ToolItem, ToolWithdrawal } from '../types';
 
 type OperatorRow = {
     id: string;
@@ -20,17 +18,20 @@ type OperatorRow = {
 export async function loadDatabase() {
     if (!supabase) return null;
 
-    const [operatorsResult, withdrawalsResult] = await Promise.all([
+    const [operatorsResult, withdrawalsResult, toolsResult] = await Promise.all([
         supabase.from('operators').select('*').order('name'),
-        supabase.from('withdrawals').select('*').order('date_retirada', { ascending: false })
+        supabase.from('withdrawals').select('*').order('date_retirada', { ascending: false }),
+        supabase.from('tools').select('*').order('name')
     ]);
 
     if (operatorsResult.error) throw operatorsResult.error;
     if (withdrawalsResult.error) throw withdrawalsResult.error;
+    if (toolsResult.error) throw toolsResult.error;
 
     return {
         operators: (operatorsResult.data || []).map(mapOperatorFromRow),
-        withdrawals: (withdrawalsResult.data || []).map(mapWithdrawalFromRow)
+        withdrawals: (withdrawalsResult.data || []).map(mapWithdrawalFromRow),
+        tools: (toolsResult.data || []).map(mapToolFromRow)
     };
 }
 
@@ -43,6 +44,12 @@ export async function saveOperators(operators: Operator[]) {
 export async function saveWithdrawals(withdrawals: ToolWithdrawal[]) {
     if (!supabase) return;
     const { error } = await supabase.from('withdrawals').upsert(withdrawals.map(mapWithdrawalToRow));
+    if (error) throw error;
+}
+
+export async function saveTools(tools: ToolItem[]) {
+    if (!supabase) return;
+    const { error } = await supabase.from('tools').upsert(tools);
     if (error) throw error;
 }
 
@@ -76,6 +83,10 @@ function mapOperatorFromRow(row: OperatorRow): Operator {
         notes: row.notes || undefined,
         avatarUrl: row.avatar_url || undefined
     };
+}
+
+function mapToolFromRow(row: ToolItem): ToolItem {
+    return row;
 }
 
 function mapWithdrawalToRow(withdrawal: ToolWithdrawal) {

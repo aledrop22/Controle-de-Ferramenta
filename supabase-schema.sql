@@ -33,11 +33,20 @@ create table if not exists public.withdrawals (
   overtime_until text
 );
 
+create table if not exists public.tools (
+  id text primary key,
+  name text not null,
+  spec text not null,
+  category text not null,
+  code text not null
+);
+
 create index if not exists withdrawals_status_idx on public.withdrawals(status);
 create index if not exists withdrawals_date_retirada_idx on public.withdrawals(date_retirada desc);
 
 alter table public.operators enable row level security;
 alter table public.withdrawals enable row level security;
+alter table public.tools enable row level security;
 
 create policy "public read operators" on public.operators for select using (true);
 create policy "public write operators" on public.operators for insert with check (true);
@@ -46,3 +55,7 @@ create policy "public update operators" on public.operators for update using (tr
 create policy "public read withdrawals" on public.withdrawals for select using (true);
 create policy "public write withdrawals" on public.withdrawals for insert with check (true);
 create policy "public update withdrawals" on public.withdrawals for update using (true) with check (true);
+
+create policy "public read tools" on public.tools for select using (true);
+create policy "public write tools" on public.tools for insert with check (true);
+create policy "public update tools" on public.tools for update using (true) with check (true);

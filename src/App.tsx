@@ -25,7 +25,7 @@ import { TransferModal } from './components/TransferModal';
 import { PinLockModal } from './components/PinLockModal';
 import { ShieldCheck, Layers } from 'lucide-react';
 import { isSupabaseConfigured } from './lib/supabase';
-import { loadDatabase, saveOperators, saveWithdrawals } from './services/database';
+import { loadDatabase, saveOperators, saveTools, saveWithdrawals } from './services/database';
 
 export default function App() {
   // Check if opened via Tablet URL (?acesso=chao)
@@ -103,13 +103,14 @@ export default function App() {
         if (data) {
           setOperators(data.operators);
           setWithdrawals(data.withdrawals);
+          if (data.tools.length > 0) setTools(data.tools);
         }
       })
       .catch((error) => console.error('Erro ao carregar dados do Supabase', error))
       .finally(() => setIsDatabaseReady(true));
   }, []);
 
-  const [tools] = useState<ToolItem[]>(INITIAL_TOOLS);
+  const [tools, setTools] = useState<ToolItem[]>(INITIAL_TOOLS);
   const [sectors] = useState<string[]>(INITIAL_SECTORS);
 
   // Standard Button Visual Style Theme
@@ -151,6 +152,12 @@ export default function App() {
       saveOperators(operators).catch((error) => console.error('Erro ao salvar operadores', error));
     }
   }, [operators, isDatabaseReady]);
+
+  useEffect(() => {
+    if (isDatabaseReady && isSupabaseConfigured) {
+      saveTools(tools).catch((error) => console.error('Erro ao salvar ferramentas', error));
+    }
+  }, [tools, isDatabaseReady]);
 
   const handleAddOperator = (newOp: Operator) => {
     setOperators((prev) => [newOp, ...prev]);
