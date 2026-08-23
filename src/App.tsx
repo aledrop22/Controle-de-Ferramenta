@@ -10,8 +10,7 @@ import {
 import {
   INITIAL_OPERATORS,
   INITIAL_TOOLS,
-  INITIAL_SECTORS,
-  INITIAL_WITHDRAWALS
+  INITIAL_SECTORS
 } from './data/mockData';
 import { Header } from './components/Header';
 import { KpiCards } from './components/KpiCards';
@@ -72,12 +71,13 @@ export default function App() {
     const saved = localStorage.getItem('painel_ferramentas_withdrawals_v4');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const storedWithdrawals = JSON.parse(saved) as ToolWithdrawal[];
+        return storedWithdrawals.filter((item) => !item.id.startsWith('w-active-') && !item.id.startsWith('w-hist-'));
       } catch (e) {
         console.error('Erro ao ler do localStorage', e);
       }
     }
-    return INITIAL_WITHDRAWALS;
+    return [];
   });
 
   // Operators state with persistence (v4)
@@ -92,6 +92,9 @@ export default function App() {
     }
     return INITIAL_OPERATORS;
   });
+
+  const [tools, setTools] = useState<ToolItem[]>(INITIAL_TOOLS);
+  const [sectors] = useState<string[]>(INITIAL_SECTORS);
 
   const [isDatabaseReady, setIsDatabaseReady] = useState(!isSupabaseConfigured);
 
@@ -110,8 +113,6 @@ export default function App() {
       .finally(() => setIsDatabaseReady(true));
   }, []);
 
-  const [tools, setTools] = useState<ToolItem[]>(INITIAL_TOOLS);
-  const [sectors] = useState<string[]>(INITIAL_SECTORS);
 
   // Standard Button Visual Style Theme
   const buttonStyle: ButtonStyleVariant = 'modern-slate';
@@ -292,7 +293,7 @@ export default function App() {
   // Reset to initial mock data
   const handleResetData = () => {
     if (window.confirm('Deseja restaurar os dados originais do painel?')) {
-      setWithdrawals(INITIAL_WITHDRAWALS);
+      setWithdrawals([]);
       localStorage.removeItem('painel_ferramentas_withdrawals_v4');
     }
   };
@@ -302,6 +303,8 @@ export default function App() {
   const toolNames = Array.from(new Set(withdrawals.map((w) => w.toolName)));
 
   const activeCount = withdrawals.filter((w) => w.status === 'active').length;
+  const today = new Date().toDateString();
+  const totalToday = withdrawals.filter((w) => new Date(w.dateRetirada).toDateString() === today).length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white pb-12">
@@ -319,7 +322,7 @@ export default function App() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         activeCount={activeCount}
-        totalToday={withdrawals.length}
+        totalToday={totalToday}
         totalOperatorsCount={operators.length}
       />
 

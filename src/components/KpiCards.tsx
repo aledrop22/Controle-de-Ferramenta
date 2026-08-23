@@ -9,20 +9,22 @@ interface Props {
 export const KpiCards: React.FC<Props> = ({ withdrawals }) => {
   const activeWithdrawals = withdrawals.filter((w) => w.status === 'active');
   const returnedWithdrawals = withdrawals.filter((w) => w.status === 'returned');
-  
-  // Calculate returned today (simulate based on today's date)
+
+  // Keep daily counters separate from the historical records.
   const todayStr = new Date().toISOString().split('T')[0];
-  const returnedToday = returnedWithdrawals.filter((w) => 
+  const returnedToday = returnedWithdrawals.filter((w) =>
     w.dateDevolucao && w.dateDevolucao.startsWith(todayStr)
   );
 
-  // Overdue check (e.g. active for over 6 hours or status 'overdue')
+  const now = new Date();
+  const shiftDeadline = new Date(now);
+  shiftDeadline.setHours(17, 0, 0, 0);
+
   const overdueWithdrawals = activeWithdrawals.filter((w) => {
     if (w.status === 'overdue') return true;
     const checkoutTime = new Date(w.dateRetirada).getTime();
-    const now = Date.now();
-    const hoursElapsed = (now - checkoutTime) / (1000 * 60 * 60);
-    return hoursElapsed > 6;
+    const wasFromPreviousDay = new Date(w.dateRetirada).toDateString() !== now.toDateString();
+    return !w.isOvertime && (wasFromPreviousDay || (now >= shiftDeadline && checkoutTime <= shiftDeadline.getTime()));
   });
 
   const totalClosed = returnedWithdrawals.length;
@@ -31,7 +33,7 @@ export const KpiCards: React.FC<Props> = ({ withdrawals }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-      
+
       {/* KPI 1: Ferramentas Em Uso */}
       <div className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-4 shadow-lg transition-all duration-200 group relative overflow-hidden">
         <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl group-hover:bg-blue-500/10 transition-all" />
@@ -72,7 +74,7 @@ export const KpiCards: React.FC<Props> = ({ withdrawals }) => {
             </p>
             <div className="flex items-baseline gap-2 mt-2">
               <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                {returnedToday.length > 0 ? returnedToday.length : returnedWithdrawals.length}
+                {returnedToday.length}
               </span>
               <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
                 <TrendingUp className="w-3 h-3" />
@@ -102,26 +104,24 @@ export const KpiCards: React.FC<Props> = ({ withdrawals }) => {
               <span className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${overdueWithdrawals.length > 0 ? 'text-rose-400' : 'text-slate-200'}`}>
                 {overdueWithdrawals.length}
               </span>
-              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${
-                overdueWithdrawals.length > 0 
-                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' 
+              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${overdueWithdrawals.length > 0
+                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
                   : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              }`}>
+                }`}>
                 {overdueWithdrawals.length > 0 ? 'Requer Atenção' : 'OK'}
               </span>
             </div>
           </div>
-          <div className={`p-2.5 rounded-xl border group-hover:scale-110 transition-transform ${
-            overdueWithdrawals.length > 0 
-              ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' 
+          <div className={`p-2.5 rounded-xl border group-hover:scale-110 transition-transform ${overdueWithdrawals.length > 0
+              ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
               : 'bg-slate-800 text-slate-400 border-slate-700'
-          }`}>
+            }`}>
             <AlertTriangle className="w-5 h-5" />
           </div>
         </div>
         <p className="text-[11px] text-slate-400 mt-3">
-          {overdueWithdrawals.length > 0 
-            ? 'Ferramentas com tempo de permanência prolongado' 
+          {overdueWithdrawals.length > 0
+            ? 'Ferramentas com tempo de permanência prolongado'
             : 'Todas as devoluções dentro do prazo esperado'}
         </p>
       </div>
@@ -151,7 +151,7 @@ export const KpiCards: React.FC<Props> = ({ withdrawals }) => {
         {/* Mini progress bar */}
         <div className="mt-3">
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div 
+            <div
               className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-500"
               style={{ width: `${onTimeRate}%` }}
             />
