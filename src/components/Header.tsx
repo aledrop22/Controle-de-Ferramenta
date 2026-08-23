@@ -33,25 +33,25 @@ export const Header: React.FC<Props> = ({
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-30 shadow-xl">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5">
-        <div className="flex flex-row items-center justify-between gap-2">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
 
           {/* App Title */}
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="flex min-w-0 items-center gap-2">
-              <div className="w-32 h-10 flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-28 sm:w-32 h-10 flex items-center justify-center overflow-hidden shrink-0">
                 <img
                   src="/assets/logo-mectrol-completo.png"
                   alt="Mectrol"
                   className="w-full h-full object-contain"
                 />
               </div>
-              <h1 className="whitespace-nowrap text-base sm:text-lg font-bold tracking-tight text-white">
+              <h1 className="whitespace-nowrap text-sm sm:text-base md:text-lg font-bold tracking-tight text-white">
                 Painel de Ferramentas
               </h1>
             </div>
 
             {/* View Mode Switcher Tabs */}
-            <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 shrink-0">
+            <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 shrink-0 w-full sm:w-auto">
               <button
                 onClick={() => {
                   if (viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl) {
@@ -64,7 +64,7 @@ export const Header: React.FC<Props> = ({
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'qualidade'
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  } whitespace-nowrap`}
+                  } whitespace-nowrap flex-1 justify-center`}
               >
                 {viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl ? (
                   <Lock className="w-3.5 h-3.5 text-rose-400" />
@@ -79,29 +79,19 @@ export const Header: React.FC<Props> = ({
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'chao-de-fabrica'
                   ? 'bg-amber-600 text-white shadow-md shadow-amber-950'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  } whitespace-nowrap`}
+                  } whitespace-nowrap flex-1 justify-center`}
               >
                 <Monitor className="w-3.5 h-3.5 text-amber-300" />
                 <span>Chão de Fábrica (Tablet)</span>
               </button>
             </div>
 
-            {/* Quick Action mobile Nova Retirada */}
-            {viewMode === 'qualidade' && (
-              <button
-                onClick={onOpenNewWithdrawalModal}
-                className={`lg:hidden px-2.5 py-1.5 rounded-lg font-semibold text-xs flex items-center gap-1.5 ${getPrimaryButtonStyle(buttonStyle)}`}
-              >
-                <Plus className="w-4 h-4" />
-                <span>Nova Retirada</span>
-              </button>
-            )}
           </div>
 
           {/* Search & Actions Bar */}
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex w-full md:w-auto min-w-0 flex-wrap items-center gap-1.5">
             {/* Search Input */}
-            <div className="relative w-44 xl:w-56">
+            <div className="relative min-w-0 flex-1 md:w-44 md:flex-none xl:w-56">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
@@ -137,7 +127,7 @@ export const Header: React.FC<Props> = ({
             {viewMode === 'qualidade' && (
               <button
                 onClick={onOpenNewWithdrawalModal}
-                className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl font-semibold text-xs tracking-wide uppercase transition-all shadow-md whitespace-nowrap ${getPrimaryButtonStyle(buttonStyle)}`}
+                className={`flex w-full sm:w-auto items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl font-semibold text-xs tracking-wide uppercase transition-all shadow-md whitespace-nowrap ${getPrimaryButtonStyle(buttonStyle)}`}
               >
                 <Plus className="w-4 h-4" />
                 <span>Nova Retirada</span>
