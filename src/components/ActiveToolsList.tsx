@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ToolWithdrawal, ButtonStyleVariant } from '../types';
 import { getActionButtonStyle } from '../utils/buttonStyles';
-import { RotateCcw, Clock, Calendar, CheckCircle2, UserCheck, ChevronDown, ChevronUp, Sparkles, Inbox } from 'lucide-react';
+import { RotateCcw, Clock, Calendar, CheckCircle2, UserCheck, ChevronDown, ChevronUp, Sparkles, Inbox, AlertTriangle } from 'lucide-react';
 
 interface Props {
   withdrawals: ToolWithdrawal[];
@@ -26,6 +26,57 @@ export const ActiveToolsList: React.FC<Props> = ({
   onOpenNewWithdrawalModal
 }) => {
   const activeWithdrawals = withdrawals.filter((w) => w.status === 'active');
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const lastOverdueCountRef = useRef(0);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const isOverdue = (item: ToolWithdrawal): boolean => {
+    if (item.isOvertime) return false;
+    const deadline = new Date(currentTime);
+    deadline.setHours(17, 0, 0, 0);
+    const withdrawalDate = new Date(item.dateRetirada);
+    return withdrawalDate.toDateString() !== currentTime.toDateString() || currentTime >= deadline && withdrawalDate <= deadline;
+  };
+
+  const overdueCount = activeWithdrawals.filter(isOverdue).length;
+
+  useEffect(() => {
+    const activateAlerts = () => {
+      if (!audioContextRef.current) audioContextRef.current = new AudioContext();
+      if (audioContextRef.current.state === 'suspended') void audioContextRef.current.resume();
+      window.removeEventListener('pointerdown', activateAlerts);
+    };
+    window.addEventListener('pointerdown', activateAlerts);
+    return () => window.removeEventListener('pointerdown', activateAlerts);
+  }, []);
+
+  useEffect(() => {
+    if (overdueCount <= lastOverdueCountRef.current) {
+      lastOverdueCountRef.current = overdueCount;
+      return;
+    }
+
+    lastOverdueCountRef.current = overdueCount;
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.22, audioContext.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.4);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.45);
+  }, [overdueCount]);
 
   // Group active withdrawals by operator
   const groupedByOperator: Record<string, OperatorGroup> = {};
@@ -99,7 +150,7 @@ export const ActiveToolsList: React.FC<Props> = ({
 
   return (
     <section className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl mb-6">
-      
+
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800">
         <div className="flex items-center gap-3">
@@ -159,10 +210,14 @@ export const ActiveToolsList: React.FC<Props> = ({
         <div className="space-y-4">
           {Object.entries(groupedByOperator).map(([opId, group]) => {
             const isCollapsed = expandedOperators[opId];
+            const overdueItems = group.items.filter(isOverdue);
             return (
               <div
                 key={opId}
-                className="bg-slate-800/60 border border-slate-700/70 hover:border-slate-600/80 rounded-xl p-3.5 sm:p-4 transition-all shadow-md group"
+                className={`bg-slate-800/60 border rounded-xl p-3.5 sm:p-4 transition-all shadow-md group ${overdueItems.length > 0
+                  ? 'border-rose-500/60 hover:border-rose-400/80'
+                  : 'border-slate-700/70 hover:border-slate-600/80'
+                  }`}
               >
                 {/* Operator Header Bar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-700/60">
@@ -224,6 +279,16 @@ export const ActiveToolsList: React.FC<Props> = ({
                     </button>
                   </div>
                 </div>
+
+                {overdueItems.length > 0 && (
+                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+                    <span>
+                      <strong className="font-extrabold text-rose-300">Atenção: devolução atrasada.</strong>{' '}
+                      {group.operatorName} deve devolver {overdueItems.length === 1 ? 'a ferramenta pendente' : `as ${overdueItems.length} ferramentas pendentes`} ou solicitar Horas Extras.
+                    </span>
+                  </div>
+                )}
 
                 {/* Items List */}
                 {!isCollapsed && (
