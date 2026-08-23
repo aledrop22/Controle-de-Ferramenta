@@ -42,9 +42,9 @@ export const Header: React.FC<Props> = ({
           {/* App Title & Status */}
           <div className="flex items-center justify-between lg:justify-start gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-10 rounded-xl bg-slate-100 flex items-center justify-center shadow-lg shadow-slate-950/30 border border-slate-300/40 overflow-hidden">
+              <div className="w-12 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-950/30 border border-slate-300/40 overflow-hidden">
                 <img
-                  src="/assets/mectrol.png"
+                  src="/assets/mectro01.png"
                   alt="Mectrol"
                   className="max-w-[42px] max-h-[30px] object-contain"
                 />
@@ -81,8 +81,8 @@ export const Header: React.FC<Props> = ({
                 }}
                 title={isChaoDeFabricaUrl ? "Acesso Restrito - Requer Senha de Supervisor" : "Ir para Gestão Qualidade"}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'qualidade'
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                   }`}
               >
                 {viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl ? (
@@ -96,8 +96,8 @@ export const Header: React.FC<Props> = ({
               <button
                 onClick={() => onViewModeChange('chao-de-fabrica')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'chao-de-fabrica'
-                    ? 'bg-amber-600 text-white shadow-md shadow-amber-950'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-amber-600 text-white shadow-md shadow-amber-950'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                   }`}
               >
                 <Monitor className="w-3.5 h-3.5 text-amber-300" />
