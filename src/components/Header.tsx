@@ -33,10 +33,10 @@ export const Header: React.FC<Props> = ({
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-30 shadow-xl">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2.5">
 
           {/* App Title */}
-          <div className="flex min-w-0 flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="flex min-w-0 flex-col lg:flex-row items-stretch lg:items-center gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <div className="w-28 sm:w-32 h-10 flex items-center justify-center overflow-hidden shrink-0">
                 <img
