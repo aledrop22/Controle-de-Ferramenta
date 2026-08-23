@@ -21,7 +21,6 @@ import { NewWithdrawalModal } from './components/NewWithdrawalModal';
 import { CollaboratorsModal } from './components/CollaboratorsModal';
 import { ChaoDeFabricaView } from './components/ChaoDeFabricaView';
 import { TransferModal } from './components/TransferModal';
-import { PinLockModal } from './components/PinLockModal';
 import { ShieldCheck, Layers } from 'lucide-react';
 import { isSupabaseConfigured } from './lib/supabase';
 import { loadDatabase, saveOperators, saveTools, saveWithdrawals } from './services/database';
@@ -48,9 +47,6 @@ export default function App() {
     }
     return 'qualidade';
   });
-
-  // Security PIN modal state
-  const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
 
   // Keep URL query parameter in sync when switching view modes
   const handleViewModeChange = (mode: AppViewMode) => {
@@ -315,7 +311,7 @@ export default function App() {
         buttonStyle={buttonStyle}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
-        onRequestQualityAccess={() => setIsPinModalOpen(true)}
+        onRequestQualityAccess={() => window.alert('Acesso não permitido neste tablet. Para acessar a Gestão Qualidade, utilize o computador da sala da Qualidade.')}
         isChaoDeFabricaUrl={isChaoDeFabricaUrl}
         onOpenNewWithdrawalModal={() => setIsModalOpen(true)}
         onOpenCollaboratorsModal={() => setIsCollaboratorsModalOpen(true)}
@@ -421,16 +417,6 @@ export default function App() {
         operators={operators}
         sectors={sectors}
         onConfirmTransfer={handleConfirmTransfer}
-      />
-
-      {/* Supervisor PIN Security Lock Modal */}
-      <PinLockModal
-        isOpen={isPinModalOpen}
-        onClose={() => setIsPinModalOpen(false)}
-        onSuccess={() => {
-          setIsPinModalOpen(false);
-          handleViewModeChange('qualidade');
-        }}
       />
 
     </div>
