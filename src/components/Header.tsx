@@ -45,7 +45,7 @@ export const Header: React.FC<Props> = ({
                   className="w-full h-full object-contain"
                 />
               </div>
-              <h1 className="whitespace-nowrap text-center lg:text-left text-base sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white">
+              <h1 className="shrink-0 whitespace-nowrap text-center lg:text-left text-base sm:text-xl lg:text-xl font-extrabold tracking-tight text-white">
                 Painel de Ferramentas
               </h1>
             </div>
