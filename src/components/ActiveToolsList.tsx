@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ToolWithdrawal, ButtonStyleVariant } from '../types';
 import { getActionButtonStyle } from '../utils/buttonStyles';
 import { RotateCcw, Clock, Calendar, CheckCircle2, UserCheck, ChevronDown, ChevronUp, Sparkles, Inbox, AlertTriangle } from 'lucide-react';
+import { defaultAvatarUrl, getOperatorAvatarUrl } from '../utils/operatorAvatar';
 
 interface Props {
   withdrawals: ToolWithdrawal[];
+  operators: { id: string; name: string; avatarUrl?: string }[];
   buttonStyle: ButtonStyleVariant;
   onReturnTool: (id: string) => void;
   onReturnAllForOperator: (operatorId: string) => void;
@@ -12,14 +14,17 @@ interface Props {
 }
 
 interface OperatorGroup {
+  operatorId: string;
   operatorName: string;
   sector: string;
   machine: string;
+  avatarUrl: string;
   items: ToolWithdrawal[];
 }
 
 export const ActiveToolsList: React.FC<Props> = ({
   withdrawals,
+  operators,
   buttonStyle,
   onReturnTool,
   onReturnAllForOperator,
@@ -82,10 +87,13 @@ export const ActiveToolsList: React.FC<Props> = ({
   const groupedByOperator: Record<string, OperatorGroup> = {};
   activeWithdrawals.forEach((item) => {
     if (!groupedByOperator[item.operatorId]) {
+      const operator = operators.find((candidate) => candidate.id === item.operatorId || candidate.name === item.operatorName);
       groupedByOperator[item.operatorId] = {
+        operatorId: item.operatorId,
         operatorName: item.operatorName,
         sector: item.sector,
         machine: item.machine,
+        avatarUrl: getOperatorAvatarUrl(operator?.id || item.operatorId, operator?.name || item.operatorName),
         items: []
       };
     }
@@ -224,7 +232,15 @@ export const ActiveToolsList: React.FC<Props> = ({
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div className="w-10 h-10 rounded-xl bg-slate-700 border border-slate-600 flex items-center justify-center font-bold text-white text-sm uppercase overflow-hidden shadow-inner">
-                        {group.operatorName.charAt(0)}
+                        <img
+                          src={group.avatarUrl}
+                          alt={group.operatorName}
+                          className="w-full h-full object-cover"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = operators.find((operator) => operator.id === group.operatorId)?.avatarUrl || defaultAvatarUrl;
+                          }}
+                        />
                       </div>
                       <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-slate-900 rounded-full" />
                     </div>

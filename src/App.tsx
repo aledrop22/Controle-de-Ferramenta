@@ -332,6 +332,7 @@ export default function App() {
             {/* Real-time Active Tools Section */}
             <ActiveToolsList
               withdrawals={withdrawals}
+              operators={operators}
               buttonStyle={buttonStyle}
               onReturnTool={handleReturnTool}
               onReturnAllForOperator={handleReturnAllForOperator}
