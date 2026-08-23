@@ -58,37 +58,39 @@ export const Header: React.FC<Props> = ({
           </div>
 
           {/* Second row: search and utility actions */}
-          <div className="flex w-full min-w-0 items-center gap-1.5">
-            <div className="relative min-w-0 flex-1">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Buscar operador, ferramenta..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-slate-800/90 border border-slate-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-              />
-            </div>
+          {viewMode === 'qualidade' && (
+            <div className="flex w-full min-w-0 items-center gap-1.5">
+              <div className="relative min-w-0 flex-1">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar operador, ferramenta..."
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className="w-full bg-slate-800/90 border border-slate-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                />
+              </div>
 
-            <button
-              onClick={onOpenCollaboratorsModal}
-              title="Ver Lista Completa de Colaboradores"
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all duration-150 flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
-            >
-              <Users className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="hidden sm:inline">Colaboradores ({totalOperatorsCount})</span>
-            </button>
-
-            {viewMode === 'qualidade' && (
               <button
-                onClick={onResetData}
-                title="Restaurar Dados Iniciais"
-                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-all duration-150 shrink-0"
+                onClick={onOpenCollaboratorsModal}
+                title="Ver Lista Completa de Colaboradores"
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all duration-150 flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
+                <Users className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden sm:inline">Colaboradores ({totalOperatorsCount})</span>
               </button>
-            )}
-          </div>
+
+              {viewMode === 'qualidade' && (
+                <button
+                  onClick={onResetData}
+                  title="Restaurar Dados Iniciais"
+                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-all duration-150 shrink-0"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Third row: view mode navigation */}
           <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 w-full">

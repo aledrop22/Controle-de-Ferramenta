@@ -146,7 +146,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-xs font-bold font-mono">
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-xs font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             {activeWithdrawals.length === 1
               ? '1 Ferramenta no Chão de Fábrica'
