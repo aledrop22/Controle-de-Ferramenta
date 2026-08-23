@@ -1,7 +1,7 @@
 import React from 'react';
 import { ButtonStyleVariant, AppViewMode } from '../types';
 import { getPrimaryButtonStyle } from '../utils/buttonStyles';
-import { Wrench, Plus, RefreshCw, Search, Users, Shield, Monitor, Lock } from 'lucide-react';
+import { Plus, RefreshCw, Search, Users, Shield, Monitor, Lock } from 'lucide-react';
 
 interface Props {
   buttonStyle: ButtonStyleVariant;
@@ -38,12 +38,16 @@ export const Header: React.FC<Props> = ({
     <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-30 shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          
+
           {/* App Title & Status */}
           <div className="flex items-center justify-between lg:justify-start gap-3">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30">
-                <Wrench className="w-5 h-5 animate-pulse" />
+              <div className="w-12 h-10 rounded-xl bg-slate-100 flex items-center justify-center shadow-lg shadow-slate-950/30 border border-slate-300/40 overflow-hidden">
+                <img
+                  src="/assets/mectrol.png"
+                  alt="Mectrol"
+                  className="max-w-[42px] max-h-[30px] object-contain"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -76,11 +80,10 @@ export const Header: React.FC<Props> = ({
                   }
                 }}
                 title={isChaoDeFabricaUrl ? "Acesso Restrito - Requer Senha de Supervisor" : "Ir para Gestão Qualidade"}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  viewMode === 'qualidade'
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'qualidade'
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                }`}
+                  }`}
               >
                 {viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl ? (
                   <Lock className="w-3.5 h-3.5 text-rose-400" />
@@ -92,11 +95,10 @@ export const Header: React.FC<Props> = ({
 
               <button
                 onClick={() => onViewModeChange('chao-de-fabrica')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  viewMode === 'chao-de-fabrica'
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'chao-de-fabrica'
                     ? 'bg-amber-600 text-white shadow-md shadow-amber-950'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                }`}
+                  }`}
               >
                 <Monitor className="w-3.5 h-3.5 text-amber-300" />
                 <span>Chão de Fábrica (Tablet)</span>
