@@ -59,3 +59,6 @@ create policy "public update withdrawals" on public.withdrawals for update using
 create policy "public read tools" on public.tools for select using (true);
 create policy "public write tools" on public.tools for insert with check (true);
 create policy "public update tools" on public.tools for update using (true) with check (true);
+
+-- Para iniciar uma nova semana sem dados de teste, execute separadamente:
+-- delete from public.withdrawals;
