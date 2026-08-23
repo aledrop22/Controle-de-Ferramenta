@@ -227,6 +227,10 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
   }, initialGroupAcc);
 
   const operatorGroupsList = Object.values(groupedByOperator) as OperatorGroup[];
+  const returnedWithdrawals = withdrawals
+    .filter((item) => item.status === 'returned' && item.dateDevolucao)
+    .sort((first, second) => new Date(second.dateDevolucao || 0).getTime() - new Date(first.dateDevolucao || 0).getTime())
+    .slice(0, 10);
 
   return (
     <div className="space-y-6 animate-fadeIn pb-8">
@@ -502,6 +506,58 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
           })}
         </div>
       )}
+
+      {/* Recent returned tools */}
+      <section className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <h2 className="text-sm font-extrabold text-white tracking-wide">Últimas Devoluções</h2>
+          </div>
+          <span className="text-xs text-slate-400">{returnedWithdrawals.length} registro(s)</span>
+        </div>
+
+        {returnedWithdrawals.length === 0 ? (
+          <p className="px-4 py-6 text-center text-xs text-slate-500">Nenhuma devolução registrada ainda.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left text-xs">
+              <thead className="bg-slate-950/70 text-[10px] uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-2.5 font-bold">Ferramenta</th>
+                  <th className="px-4 py-2.5 font-bold">Operador</th>
+                  <th className="px-4 py-2.5 font-bold">Setor / Máquina</th>
+                  <th className="px-4 py-2.5 font-bold">Retirada</th>
+                  <th className="px-4 py-2.5 font-bold">Devolução</th>
+                  <th className="px-4 py-2.5 font-bold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80">
+                {returnedWithdrawals.map((item) => (
+                  <tr key={item.id} className="text-slate-300 hover:bg-slate-800/40">
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-slate-100">{item.toolName}</div>
+                      <div className="mt-0.5 text-[11px] text-slate-500">{item.spec}</div>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-slate-200">{item.operatorName}</td>
+                    <td className="px-4 py-3">
+                      <div>{item.sector}</div>
+                      <div className="mt-0.5 text-[11px] text-slate-500">{item.machine}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDateTime(item.dateRetirada)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDateTime(item.dateDevolucao || '')}</td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300">
+                        <CheckCircle2 className="h-3 w-3" /> Devolvida
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
     </div>
   );
