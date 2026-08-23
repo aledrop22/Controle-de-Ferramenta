@@ -2,7 +2,15 @@
 <img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Controle de Ferramentas
+# Controle de Ferramentas Vercel
+
+Este repositorio e exclusivamente a aplicacao Vercel em TypeScript/Vite.
+
+- Repositorio: `aledrop22/Controle-de-Ferramenta`
+- Pasta local: `Controle-Ferramenta Vercel`
+- Deploy: `controle-de-ferramenta.vercel.app`
+
+O projeto Streamlit em Python fica separado no repositorio `aledrop22/Controle-Ferramenta-Chao-Fabrica`, na pasta local `Controle-Ferramenta`. Nao mova arquivos entre os dois projetos.
 
 Aplicacao React + TypeScript + Vite para controle de retiradas e devolucoes de ferramentas, publicada no Vercel.
 
