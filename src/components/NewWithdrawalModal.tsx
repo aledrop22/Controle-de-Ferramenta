@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Operator, ToolItem, ToolWithdrawal, ButtonStyleVariant } from '../types';
-import { ESTOQUE_CATEGORIES } from '../data/mockData';
+import { Operator, ToolItem, ButtonStyleVariant } from '../types';
+import { ESTOQUE_CATEGORIES, USINAGEM_MACHINES } from '../data/mockData';
 import { getPrimaryButtonStyle } from '../utils/buttonStyles';
 import {
   X,
@@ -15,7 +15,8 @@ import {
   Plus,
   Trash2,
   Sliders,
-  Sparkles
+  Sparkles,
+  ArrowRightLeft
 } from 'lucide-react';
 
 export interface SelectedToolBatchItem {
@@ -30,7 +31,6 @@ interface Props {
   onClose: () => void;
   operators: Operator[];
   tools: ToolItem[];
-  withdrawals: ToolWithdrawal[];
   sectors: string[];
   buttonStyle: ButtonStyleVariant;
   onSubmit: (withdrawals: Array<{
@@ -49,17 +49,18 @@ export const NewWithdrawalModal: React.FC<Props> = ({
   isOpen,
   onClose,
   operators,
-  withdrawals,
   sectors,
   buttonStyle,
   onSubmit
 }) => {
+  if (!isOpen) return null;
+
   // Selected Operator State
   const defaultOp = operators[0];
   const [selectedOperatorId, setSelectedOperatorId] = useState<string>(defaultOp?.id || '');
   const [selectedSector, setSelectedSector] = useState<string>(defaultOp?.sector || 'Usinagem');
-  const [machineInput, setMachineInput] = useState<string>(defaultOp?.machine || 'Geral');
-  const [showOverrideSectorMachine, setShowOverrideSectorMachine] = useState<boolean>(false);
+  const [machineInput, setMachineInput] = useState<string>(defaultOp?.machine || 'GL 01');
+  const [activeSectorTab, setActiveSectorTab] = useState<string>('Usinagem');
 
   // Tool Category & Batch Selection State
   const categoryNames = Object.keys(ESTOQUE_CATEGORIES);
@@ -71,12 +72,6 @@ export const NewWithdrawalModal: React.FC<Props> = ({
   const [notes, setNotes] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  const activeToolKeys = new Set(
-    withdrawals
-      .filter((withdrawal) => withdrawal.status === 'active')
-      .map((withdrawal) => `${withdrawal.toolName}::${withdrawal.spec}`)
-  );
-
   // Auto-fill sector and machine when operator changes
   useEffect(() => {
     const foundOp = operators.find((o) => o.id === selectedOperatorId);
@@ -86,19 +81,28 @@ export const NewWithdrawalModal: React.FC<Props> = ({
     }
   }, [selectedOperatorId, operators]);
 
-  const handleOperatorChange = (opId: string) => {
-    setSelectedOperatorId(opId);
-    const foundOp = operators.find((o) => o.id === opId);
-    if (foundOp) {
-      setSelectedSector(foundOp.sector);
-      setMachineInput(foundOp.machine);
+  const handleSelectOperator = (op: Operator) => {
+    setSelectedOperatorId(op.id);
+    setSelectedSector(op.sector);
+    setMachineInput(op.machine || (op.sector === 'Usinagem' ? 'GL 01' : op.sector));
+    setActiveSectorTab(op.sector);
+  };
+
+  const handleSectorTabChange = (sec: string) => {
+    setActiveSectorTab(sec);
+    if (sec !== 'Todos') {
+      const firstInSec = operators.find((o) => o.sector.toLowerCase() === sec.toLowerCase());
+      if (firstInSec) {
+        setSelectedOperatorId(firstInSec.id);
+        setSelectedSector(firstInSec.sector);
+        setMachineInput(firstInSec.machine || (firstInSec.sector === 'Usinagem' ? 'GL 01' : firstInSec.sector));
+      }
     }
   };
 
   // Toggle tool item in batch
   const handleToggleToolItem = (category: string, spec: string) => {
     const itemKey = `${category}::${spec}`;
-    if (activeToolKeys.has(itemKey)) return;
     const exists = selectedBatch.some((b) => `${b.category}::${b.spec}` === itemKey);
 
     if (exists) {
@@ -148,12 +152,6 @@ export const NewWithdrawalModal: React.FC<Props> = ({
       return;
     }
 
-    const unavailableItem = selectedBatch.find((item) => activeToolKeys.has(`${item.category}::${item.spec}`));
-    if (unavailableItem) {
-      setErrorMsg(`${unavailableItem.category} (${unavailableItem.spec}) já está em uso.`);
-      return;
-    }
-
     const foundOperator = operators.find((o) => o.id === selectedOperatorId);
     const operatorName = foundOperator ? foundOperator.name : 'Operador';
 
@@ -174,12 +172,10 @@ export const NewWithdrawalModal: React.FC<Props> = ({
 
   const currentOp = operators.find((o) => o.id === selectedOperatorId) || defaultOp;
 
-  if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl relative">
-
+        
         {/* Modal Header */}
         <div className="bg-slate-800/80 px-6 py-4 border-b border-slate-700/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -209,7 +205,7 @@ export const NewWithdrawalModal: React.FC<Props> = ({
 
         {/* Modal Content */}
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5">
-
+          
           {errorMsg && (
             <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
@@ -217,86 +213,180 @@ export const NewWithdrawalModal: React.FC<Props> = ({
             </div>
           )}
 
-          {/* 1. SELEÇÃO DO OPERADOR (NOME LIMPO) */}
-          <div className="bg-slate-800/40 border border-slate-800 p-4 rounded-xl space-y-3">
+          {/* 1. SELEÇÃO DO OPERADOR & MÁQUINA/SETOR VIA CARDS (SEM JANELA SUSPENSA) */}
+          <div className="bg-slate-800/40 border border-slate-800 p-4 rounded-xl space-y-3.5">
             <div className="flex items-center justify-between gap-2">
               <label className="block text-xs font-bold text-white flex items-center gap-1.5">
                 <User className="w-4 h-4 text-indigo-400" />
-                1. Selecione o Operador Responsável
+                1. Selecione o Colaborador Responsável
               </label>
-
-              <button
-                type="button"
-                onClick={() => setShowOverrideSectorMachine(!showOverrideSectorMachine)}
-                className="text-[11px] text-slate-400 hover:text-indigo-400 flex items-center gap-1 transition-colors"
-              >
-                <Sliders className="w-3 h-3" />
-                <span>{showOverrideSectorMachine ? 'Ocultar Ajustes' : 'Ajustar Setor/Máquina'}</span>
-              </button>
+              
+              <span className="text-[11px] text-slate-400">
+                Toque no nome para selecionar
+              </span>
             </div>
 
-            {/* Operator Select with ONLY Clean Operator Names */}
-            <select
-              value={selectedOperatorId}
-              onChange={(e) => handleOperatorChange(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
-            >
-              {operators.map((op) => (
-                <option key={op.id} value={op.id}>
-                  {op.name}
-                </option>
-              ))}
-            </select>
+            {/* Abas / Filtro Rápido de Setores */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+              {[
+                { id: 'Usinagem', label: 'Usinagem' },
+                { id: 'Produção', label: 'Produção' },
+                { id: 'Manutenção', label: 'Manutenção' },
+                { id: 'Estoque', label: 'Estoque' },
+                { id: 'Expedição', label: 'Expedição' },
+                { id: 'PCP', label: 'PCP' },
+                { id: 'Qualidade', label: 'Qualidade' },
+                { id: 'Todos', label: 'Todos os Setores' }
+              ].map((tab) => {
+                const isTabActive = activeSectorTab.toLowerCase() === tab.id.toLowerCase();
+                const count = tab.id === 'Todos' 
+                  ? operators.length 
+                  : operators.filter((o) => o.sector.toLowerCase() === tab.id.toLowerCase()).length;
 
-            {/* Auto-linked Sector and Machine Badge Banner */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-indigo-950/40 border border-indigo-500/20 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-indigo-200 font-medium">Vinculado Automático:</span>
-              </div>
-              <div className="flex items-center gap-2 text-white font-semibold">
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  <Building2 className="w-3 h-3" />
-                  {selectedSector}
-                </span>
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-slate-700/80 text-slate-200 border border-slate-600">
-                  <Cpu className="w-3 h-3" />
-                  {machineInput}
-                </span>
-              </div>
-            </div>
-
-            {/* Optional Manual Override Inputs */}
-            {showOverrideSectorMachine && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800/80 animate-fadeIn">
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-400 mb-1">
-                    Setor (Alterar)
-                  </label>
-                  <select
-                    value={selectedSector}
-                    onChange={(e) => setSelectedSector(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                return (
+                  <button
+                    type="button"
+                    key={tab.id}
+                    onClick={() => handleSectorTabChange(tab.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer shrink-0 ${
+                      isTabActive
+                        ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-950/40'
+                        : 'bg-slate-800/90 hover:bg-slate-700/80 text-slate-300 border-slate-700/80'
+                    }`}
                   >
-                    {sectors.map((sec) => (
-                      <option key={sec} value={sec}>{sec}</option>
-                    ))}
-                  </select>
+                    <span>{tab.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      isTabActive ? 'bg-white/20 text-white' : 'bg-slate-700 text-slate-400'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Cards dos Colaboradores (Exibe APENAS o Nome) */}
+            <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+              {[
+                'Usinagem',
+                'Produção',
+                'Manutenção',
+                'Estoque',
+                'Expedição',
+                'PCP',
+                'Qualidade'
+              ]
+                .filter((sec) => activeSectorTab === 'Todos' || activeSectorTab.toLowerCase() === sec.toLowerCase())
+                .map((sec) => {
+                  const secOps = operators.filter((o) => o.sector.toLowerCase() === sec.toLowerCase());
+                  if (secOps.length === 0) return null;
+
+                  return (
+                    <div key={sec} className="space-y-1.5">
+                      {activeSectorTab === 'Todos' && (
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5 pt-1">
+                          <Building2 className="w-3 h-3" />
+                          <span>{sec}</span>
+                          <span className="text-slate-500 font-normal">({secOps.length})</span>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-2">
+                        {secOps.map((op) => {
+                          const isSelected = selectedOperatorId === op.id;
+
+                          return (
+                            <button
+                              type="button"
+                              key={op.id}
+                              onClick={() => handleSelectOperator(op)}
+                              className={`p-2.5 rounded-xl text-left transition-all border flex items-center justify-between gap-2 cursor-pointer ${
+                                isSelected
+                                  ? 'bg-indigo-600/20 text-white border-indigo-500 ring-2 ring-indigo-500/30 shadow-lg shadow-indigo-950/40'
+                                  : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                                  isSelected ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-300'
+                                }`}>
+                                  {op.name.charAt(0)}
+                                </div>
+                                <span className="text-xs font-bold truncate">
+                                  {op.name}
+                                </span>
+                              </div>
+
+                              {isSelected && (
+                                <Check className="w-4 h-4 text-indigo-400 shrink-0" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {/* SELEÇÃO DIRETA DE MÁQUINAS DA USINAGEM (Aparece SOMENTE para Usinagem) */}
+            {selectedSector === 'Usinagem' && (
+              <div className="space-y-2 pt-2.5 border-t border-slate-800/80 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+                    <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+                    Máquina de Destino na Usinagem (Toque para trocar de máquina se necessário):
+                  </label>
+                  <span className="text-[10px] text-slate-400">Padrão do operador selecionado</span>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-400 mb-1">
-                    Máquina / Posto (Alterar)
-                  </label>
-                  <input
-                    type="text"
-                    value={machineInput}
-                    onChange={(e) => setMachineInput(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                  />
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2">
+                  {USINAGEM_MACHINES.map((machineName) => {
+                    const isSelected = machineInput.trim().toLowerCase() === machineName.trim().toLowerCase();
+
+                    return (
+                      <button
+                        type="button"
+                        key={machineName}
+                        onClick={() => {
+                          setMachineInput(machineName);
+                          setSelectedSector('Usinagem');
+                        }}
+                        className={`p-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between border cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-950 ring-2 ring-emerald-500/30'
+                            : 'bg-slate-800/90 hover:bg-slate-700/80 text-slate-300 border-slate-700 active:scale-95'
+                        }`}
+                      >
+                        <span className="truncate">{machineName}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-emerald-200 shrink-0 ml-1" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
+
+            {/* Badge de Vinculação Ativa */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-indigo-950/40 border border-indigo-500/20 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-indigo-200 font-medium">Destino da Retirada:</span>
+                <span className="text-white font-bold">{currentOp?.name}</span>
+              </div>
+              <div className="flex items-center gap-2 text-white font-semibold">
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  <Building2 className="w-3 h-3" />
+                  Setor: {selectedSector}
+                </span>
+                {selectedSector === 'Usinagem' && machineInput && (
+                  <span className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                    <Cpu className="w-3 h-3" />
+                    Máquina: {machineInput}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* 2. SELEÇÃO DE CATEGORIA E FERRAMENTAS/MEDIDAS */}
@@ -323,10 +413,11 @@ export const NewWithdrawalModal: React.FC<Props> = ({
                     type="button"
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 border shrink-0 ${isActive
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 border shrink-0 ${
+                      isActive
                         ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-950/40'
                         : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                      }`}
+                    }`}
                   >
                     <span>{cat}</span>
                     {countInCat > 0 && (
@@ -356,25 +447,20 @@ export const NewWithdrawalModal: React.FC<Props> = ({
                 {ESTOQUE_CATEGORIES[activeCategory]?.map((spec) => {
                   const itemKey = `${activeCategory}::${spec}`;
                   const isSelected = selectedBatch.some((b) => `${b.category}::${b.spec}` === itemKey);
-                  const isUnavailable = activeToolKeys.has(itemKey);
 
                   return (
                     <button
                       type="button"
                       key={spec}
                       onClick={() => handleToggleToolItem(activeCategory, spec)}
-                      disabled={isUnavailable}
-                      className={`px-2.5 py-2 rounded-lg text-xs font-mono font-medium transition-all text-left flex items-center justify-between border ${isSelected
+                      className={`px-2.5 py-2 rounded-lg text-xs font-mono font-medium transition-all text-left flex items-center justify-between border ${
+                        isSelected
                           ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/80 ring-1 ring-emerald-500/30'
-                          : isUnavailable
-                            ? 'bg-slate-900/60 text-slate-600 border-slate-800 cursor-not-allowed'
-                            : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
-                        }`}
+                          : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
+                      }`}
                     >
                       <span className="truncate">{spec}</span>
-                      {isUnavailable ? (
-                        <span className="text-[10px] uppercase font-bold">Em uso</span>
-                      ) : isSelected ? (
+                      {isSelected ? (
                         <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-1" />
                       ) : (
                         <Plus className="w-3 h-3 text-slate-500 shrink-0 ml-1 opacity-0 hover:opacity-100" />
@@ -486,10 +572,11 @@ export const NewWithdrawalModal: React.FC<Props> = ({
               <button
                 type="submit"
                 disabled={selectedBatch.length === 0}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${selectedBatch.length === 0
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${
+                  selectedBatch.length === 0
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                     : getPrimaryButtonStyle(buttonStyle)
-                  }`}
+                }`}
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Confirmar Retirada ({selectedBatch.length})</span>

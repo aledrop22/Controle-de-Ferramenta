@@ -22,7 +22,10 @@ import { NewWithdrawalModal } from './components/NewWithdrawalModal';
 import { CollaboratorsModal } from './components/CollaboratorsModal';
 import { ChaoDeFabricaView } from './components/ChaoDeFabricaView';
 import { TransferModal } from './components/TransferModal';
+import { PinLockModal } from './components/PinLockModal';
 import { ShieldCheck, Layers } from 'lucide-react';
+import { isSupabaseConfigured } from './lib/supabase';
+import { loadDatabase, saveOperators, saveWithdrawals } from './services/database';
 
 export default function App() {
   // Check if opened via Tablet URL (?acesso=chao)
@@ -47,6 +50,9 @@ export default function App() {
     return 'qualidade';
   });
 
+  // Security PIN modal state
+  const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
+
   // Keep URL query parameter in sync when switching view modes
   const handleViewModeChange = (mode: AppViewMode) => {
     setViewMode(mode);
@@ -61,9 +67,9 @@ export default function App() {
     }
   };
 
-  // Persistence state for withdrawals
+  // Persistence state for withdrawals (v4)
   const [withdrawals, setWithdrawals] = useState<ToolWithdrawal[]>(() => {
-    const saved = localStorage.getItem('painel_ferramentas_withdrawals');
+    const saved = localStorage.getItem('painel_ferramentas_withdrawals_v4');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -74,9 +80,9 @@ export default function App() {
     return INITIAL_WITHDRAWALS;
   });
 
-  // Operators state with persistence
+  // Operators state with persistence (v4)
   const [operators, setOperators] = useState<Operator[]>(() => {
-    const saved = localStorage.getItem('painel_ferramentas_operators');
+    const saved = localStorage.getItem('painel_ferramentas_operators_v4');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -86,6 +92,22 @@ export default function App() {
     }
     return INITIAL_OPERATORS;
   });
+
+  const [isDatabaseReady, setIsDatabaseReady] = useState(!isSupabaseConfigured);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    loadDatabase()
+      .then((data) => {
+        if (data) {
+          setOperators(data.operators);
+          setWithdrawals(data.withdrawals);
+        }
+      })
+      .catch((error) => console.error('Erro ao carregar dados do Supabase', error))
+      .finally(() => setIsDatabaseReady(true));
+  }, []);
 
   const [tools] = useState<ToolItem[]>(INITIAL_TOOLS);
   const [sectors] = useState<string[]>(INITIAL_SECTORS);
@@ -115,45 +137,20 @@ export default function App() {
     setHistoryFilters((prev) => ({ ...prev, search: searchQuery }));
   }, [searchQuery]);
 
-  // Auto-refresh data for Qualidade dashboard (every 5 minutes)
+  // Keep local fallback and Supabase synchronized.
   useEffect(() => {
-    if (viewMode !== 'qualidade') return;
-
-    const refreshInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
-
-    const intervalId = setInterval(() => {
-      // Reload data from localStorage to sync with other instances
-      const savedWithdrawals = localStorage.getItem('painel_ferramentas_withdrawals');
-      const savedOperators = localStorage.getItem('painel_ferramentas_operators');
-
-      if (savedWithdrawals) {
-        try {
-          setWithdrawals(JSON.parse(savedWithdrawals));
-        } catch (e) {
-          console.error('Erro ao recarregar dados de retiradas', e);
-        }
-      }
-
-      if (savedOperators) {
-        try {
-          setOperators(JSON.parse(savedOperators));
-        } catch (e) {
-          console.error('Erro ao recarregar operadores', e);
-        }
-      }
-    }, refreshInterval);
-
-    return () => clearInterval(intervalId);
-  }, [viewMode]);
-
-  // Save state to local storage
-  useEffect(() => {
-    localStorage.setItem('painel_ferramentas_withdrawals', JSON.stringify(withdrawals));
-  }, [withdrawals]);
+    localStorage.setItem('painel_ferramentas_withdrawals_v4', JSON.stringify(withdrawals));
+    if (isDatabaseReady && isSupabaseConfigured) {
+      saveWithdrawals(withdrawals).catch((error) => console.error('Erro ao salvar movimentações', error));
+    }
+  }, [withdrawals, isDatabaseReady]);
 
   useEffect(() => {
-    localStorage.setItem('painel_ferramentas_operators', JSON.stringify(operators));
-  }, [operators]);
+    localStorage.setItem('painel_ferramentas_operators_v4', JSON.stringify(operators));
+    if (isDatabaseReady && isSupabaseConfigured) {
+      saveOperators(operators).catch((error) => console.error('Erro ao salvar operadores', error));
+    }
+  }, [operators, isDatabaseReady]);
 
   const handleAddOperator = (newOp: Operator) => {
     setOperators((prev) => [newOp, ...prev]);
@@ -289,7 +286,7 @@ export default function App() {
   const handleResetData = () => {
     if (window.confirm('Deseja restaurar os dados originais do painel?')) {
       setWithdrawals(INITIAL_WITHDRAWALS);
-      localStorage.removeItem('painel_ferramentas_withdrawals');
+      localStorage.removeItem('painel_ferramentas_withdrawals_v4');
     }
   };
 
@@ -307,6 +304,7 @@ export default function App() {
         buttonStyle={buttonStyle}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+        onRequestQualityAccess={() => setIsPinModalOpen(true)}
         isChaoDeFabricaUrl={isChaoDeFabricaUrl}
         onOpenNewWithdrawalModal={() => setIsModalOpen(true)}
         onOpenCollaboratorsModal={() => setIsCollaboratorsModalOpen(true)}
@@ -391,7 +389,6 @@ export default function App() {
         onClose={() => setIsModalOpen(false)}
         operators={operators}
         tools={tools}
-        withdrawals={withdrawals}
         sectors={sectors}
         buttonStyle={buttonStyle}
         onSubmit={handleCreateWithdrawal}
@@ -413,6 +410,16 @@ export default function App() {
         operators={operators}
         sectors={sectors}
         onConfirmTransfer={handleConfirmTransfer}
+      />
+
+      {/* Supervisor PIN Security Lock Modal */}
+      <PinLockModal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+        onSuccess={() => {
+          setIsPinModalOpen(false);
+          handleViewModeChange('qualidade');
+        }}
       />
 
     </div>

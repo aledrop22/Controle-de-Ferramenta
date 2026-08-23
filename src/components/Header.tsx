@@ -1,12 +1,13 @@
 import React from 'react';
 import { ButtonStyleVariant, AppViewMode } from '../types';
 import { getPrimaryButtonStyle } from '../utils/buttonStyles';
-import { Wrench, Plus, RefreshCw, Search, Users, Shield, Monitor } from 'lucide-react';
+import { Wrench, Plus, RefreshCw, Search, Users, Shield, Monitor, Lock } from 'lucide-react';
 
 interface Props {
   buttonStyle: ButtonStyleVariant;
   viewMode: AppViewMode;
   onViewModeChange: (mode: AppViewMode) => void;
+  onRequestQualityAccess: () => void;
   isChaoDeFabricaUrl: boolean;
   onOpenNewWithdrawalModal: () => void;
   onOpenCollaboratorsModal: () => void;
@@ -22,6 +23,7 @@ export const Header: React.FC<Props> = ({
   buttonStyle,
   viewMode,
   onViewModeChange,
+  onRequestQualityAccess,
   isChaoDeFabricaUrl,
   onOpenNewWithdrawalModal,
   onOpenCollaboratorsModal,
@@ -66,15 +68,25 @@ export const Header: React.FC<Props> = ({
             {/* View Mode Switcher Tabs */}
             <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 ml-2">
               <button
-                onClick={() => onViewModeChange('qualidade')}
-                title="Ir para Gestão Qualidade"
+                onClick={() => {
+                  if (viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl) {
+                    onRequestQualityAccess();
+                  } else {
+                    onViewModeChange('qualidade');
+                  }
+                }}
+                title={isChaoDeFabricaUrl ? "Acesso Restrito - Requer Senha de Supervisor" : "Ir para Gestão Qualidade"}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   viewMode === 'qualidade'
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                 }`}
               >
-                <Shield className="w-3.5 h-3.5 text-indigo-300" />
+                {viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl ? (
+                  <Lock className="w-3.5 h-3.5 text-rose-400" />
+                ) : (
+                  <Shield className="w-3.5 h-3.5 text-indigo-300" />
+                )}
                 <span>Gestão Qualidade</span>
               </button>
 
