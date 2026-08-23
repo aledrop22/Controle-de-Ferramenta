@@ -37,7 +37,7 @@ export const Header: React.FC<Props> = ({
 
           {/* App Title */}
           <div className="flex min-w-0 flex-col lg:flex-row items-stretch lg:items-center gap-2">
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex min-w-0 items-center justify-center lg:justify-start gap-2">
               <div className="w-28 sm:w-32 h-10 flex items-center justify-center overflow-hidden shrink-0">
                 <img
                   src="/assets/logo-mectrol-completo.png"
@@ -45,7 +45,7 @@ export const Header: React.FC<Props> = ({
                   className="w-full h-full object-contain"
                 />
               </div>
-              <h1 className="whitespace-nowrap text-sm sm:text-base md:text-lg font-bold tracking-tight text-white">
+              <h1 className="whitespace-nowrap text-center lg:text-left text-base sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white">
                 Painel de Ferramentas
               </h1>
             </div>
