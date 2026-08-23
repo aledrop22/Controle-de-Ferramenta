@@ -121,7 +121,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
         operatorId: item.operatorId,
         sector: item.sector,
         machine: item.machine,
-        avatarUrl: getOperatorAvatarUrl(opInfo?.id || item.operatorId),
+        avatarUrl: getOperatorAvatarUrl(opInfo?.id || item.operatorId, opInfo?.name || item.operatorName),
         items: []
       };
     }
@@ -133,7 +133,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
 
   return (
     <div className="space-y-6 animate-fadeIn pb-8">
-      
+
       {/* Page Title & Status Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
         <div>
@@ -176,16 +176,15 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
 
       {/* Sector Filter Tabs & Refresh Button */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-xl flex items-center justify-between gap-3">
-        
+
         {/* Sector Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
           <button
             onClick={() => setSelectedSector('Todos')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
-              selectedSector === 'Todos'
-                ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-950'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-            }`}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${selectedSector === 'Todos'
+              ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-950'
+              : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+              }`}
           >
             Todos ({activeWithdrawals.length})
           </button>
@@ -198,17 +197,15 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
               <button
                 key={sector}
                 onClick={() => setSelectedSector(sector)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${
-                  isSelected
-                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-950'
-                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${isSelected
+                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-950'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                  }`}
               >
                 <span>{sector}</span>
                 {count > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                    isSelected ? 'bg-white text-indigo-700' : 'bg-slate-700 text-indigo-300'
-                  }`}>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isSelected ? 'bg-white text-indigo-700' : 'bg-slate-700 text-indigo-300'
+                    }`}>
                     {count}
                   </span>
                 )}
@@ -262,7 +259,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                 {/* Operator Header Block */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
                   <div className="flex items-center gap-3">
-                    
+
                     {/* Photo / Avatar Box */}
                     <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden shrink-0 flex items-center justify-center shadow-md">
                       {group.avatarUrl ? (
@@ -312,11 +309,10 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                   {group.items.map((item, index) => (
                     <div
                       key={item.id}
-                      className={`bg-slate-950/80 border rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
-                        item.isOvertime
-                          ? 'border-emerald-500/40 bg-gradient-to-r from-slate-950 to-emerald-950/20'
-                          : 'border-slate-800/90 hover:border-slate-700'
-                      }`}
+                      className={`bg-slate-950/80 border rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${item.isOvertime
+                        ? 'border-emerald-500/40 bg-gradient-to-r from-slate-950 to-emerald-950/20'
+                        : 'border-slate-800/90 hover:border-slate-700'
+                        }`}
                     >
                       {/* Left: Index badge + Tool Info */}
                       <div className="flex items-start gap-3">
@@ -363,7 +359,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
 
                       {/* Right: Transfer Button */}
                       <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                        
+
                         {/* Extend Overtime Toggle */}
                         {!item.isOvertime && (
                           <button

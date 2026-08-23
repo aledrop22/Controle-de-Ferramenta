@@ -79,7 +79,7 @@ export const CollaboratorsModal: React.FC<Props> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl relative">
-        
+
         {/* Modal Header */}
         <div className="bg-slate-800/80 px-6 py-4 border-b border-slate-700/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -226,7 +226,7 @@ export const CollaboratorsModal: React.FC<Props> = ({
         ) : (
           /* Main Collaborator Search & Grid */
           <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-4">
-            
+
             {/* Search & Sector Filters */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="relative w-full sm:w-72">
@@ -246,11 +246,10 @@ export const CollaboratorsModal: React.FC<Props> = ({
                   <button
                     key={sec}
                     onClick={() => setSelectedSector(sec)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                      selectedSector === sec
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-800/80 hover:bg-slate-800 text-slate-400'
-                    }`}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${selectedSector === sec
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-800/80 hover:bg-slate-800 text-slate-400'
+                      }`}
                   >
                     {sec}
                   </button>
@@ -266,7 +265,7 @@ export const CollaboratorsModal: React.FC<Props> = ({
                   className="bg-slate-800/50 border border-slate-700/60 rounded-xl p-4 transition-all hover:border-slate-600 flex items-start gap-3.5"
                 >
                   <img
-                    src={getOperatorAvatarUrl(op.id)}
+                    src={getOperatorAvatarUrl(op.id, op.name)}
                     alt={op.name}
                     className="w-12 h-12 rounded-xl object-cover border border-slate-600 shrink-0"
                     onError={(event) => {
