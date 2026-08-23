@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Operator } from '../types';
 import { Users, X, Search, Mail, Phone, Building2, Cpu, FileText, BadgeCheck, Plus } from 'lucide-react';
+import { defaultAvatarUrl, getOperatorAvatarUrl } from '../utils/operatorAvatar';
 
 interface Props {
   isOpen: boolean;
@@ -265,9 +266,13 @@ export const CollaboratorsModal: React.FC<Props> = ({
                   className="bg-slate-800/50 border border-slate-700/60 rounded-xl p-4 transition-all hover:border-slate-600 flex items-start gap-3.5"
                 >
                   <img
-                    src={op.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                    src={getOperatorAvatarUrl(op.id)}
                     alt={op.name}
                     className="w-12 h-12 rounded-xl object-cover border border-slate-600 shrink-0"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = op.avatarUrl || defaultAvatarUrl;
+                    }}
                   />
 
                   <div className="flex-1 min-w-0">

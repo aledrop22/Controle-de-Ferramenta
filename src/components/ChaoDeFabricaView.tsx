@@ -13,6 +13,7 @@ import {
   RefreshCw,
   User
 } from 'lucide-react';
+import { defaultAvatarUrl, getOperatorAvatarUrl } from '../utils/operatorAvatar';
 
 interface Props {
   withdrawals: ToolWithdrawal[];
@@ -120,7 +121,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
         operatorId: item.operatorId,
         sector: item.sector,
         machine: item.machine,
-        avatarUrl: opInfo?.avatarUrl,
+        avatarUrl: getOperatorAvatarUrl(opInfo?.id || item.operatorId),
         items: []
       };
     }
@@ -270,6 +271,10 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                           alt={group.operatorName}
                           className="w-full h-full object-cover"
                           referrerPolicy="no-referrer"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = defaultAvatarUrl;
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-tr from-indigo-600 to-indigo-800 text-white font-extrabold flex items-center justify-center text-sm">
