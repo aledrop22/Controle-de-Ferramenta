@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ToolWithdrawal, Operator, ButtonStyleVariant } from '../types';
 import {
   Clock,
@@ -42,8 +42,27 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
 }) => {
   const [selectedSector, setSelectedSector] = useState<string>('Todos');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
 
   const activeWithdrawals = withdrawals.filter((w) => w.status === 'active');
+  const pendingReturnCount = activeWithdrawals.filter((item) => !item.isOvertime).length;
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const shiftDeadline = new Date(currentTime);
+  shiftDeadline.setHours(17, 0, 0, 0);
+  const minutesUntilDeadline = Math.ceil((shiftDeadline.getTime() - currentTime.getTime()) / 60000);
+  const isAfterShift = minutesUntilDeadline <= 0;
+  const showTimeAlert = pendingReturnCount > 0 && (minutesUntilDeadline <= 20 || isAfterShift);
+
+  const timeAlertMessage = isAfterShift
+    ? `Prazo encerrado. Devolva ${pendingReturnCount === 1 ? 'a ferramenta' : 'as ferramentas'} imediatamente ou utilize Horas Extras.`
+    : minutesUntilDeadline <= 10
+      ? `Atenção: faltam ${minutesUntilDeadline} minuto(s) para as 17h. Devolva ${pendingReturnCount === 1 ? 'a ferramenta' : 'as ferramentas'} ou clique em Horas Extras.`
+      : `Aviso: faltam ${minutesUntilDeadline} minutos para as 17h. Organize a devolução ${pendingReturnCount === 1 ? 'da ferramenta' : 'das ferramentas'} ou utilize Horas Extras.`;
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -156,19 +175,32 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
       </div>
 
       {/* Turno Expediente Alert Banner (07:00 às 17:00) */}
-      <div className="bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/80 border border-amber-500/30 rounded-2xl p-4 shadow-xl">
+      <div className={`border rounded-2xl p-4 shadow-xl ${showTimeAlert && isAfterShift
+        ? 'bg-gradient-to-r from-rose-950/90 via-slate-900 to-rose-950/90 border-rose-500/50'
+        : showTimeAlert
+          ? 'bg-gradient-to-r from-amber-950/90 via-slate-900 to-amber-950/90 border-amber-500/50'
+          : 'bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/80 border-amber-500/30'
+        }`}>
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
-            <AlertTriangle className="w-5 h-5 animate-bounce" />
+          <div className={`p-2.5 rounded-xl border shrink-0 ${showTimeAlert && isAfterShift
+            ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+            : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+            }`}>
+            <AlertTriangle className={`w-5 h-5 ${showTimeAlert ? 'animate-bounce' : ''}`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                Horário de Turno: 07:00 às 17:00
+              <span className={`text-[11px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded border ${showTimeAlert && isAfterShift
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                }`}>
+                {showTimeAlert ? (isAfterShift ? 'Prazo de devolução encerrado' : 'Atenção: horário de devolução') : 'Horário de Turno: 07:00 às 17:00'}
               </span>
             </div>
             <p className="text-xs text-slate-300 mt-1">
-              Todas as ferramentas devem ser devolvidas antes das 17h. Para permanência em uso após este horário, utilize a prorrogação de <strong>Horas Extras</strong>.
+              {showTimeAlert
+                ? timeAlertMessage
+                : <>Todas as ferramentas devem ser devolvidas antes das 17h. Para permanência em uso após este horário, utilize a prorrogação de <strong>Horas Extras</strong>.</>}
             </p>
           </div>
         </div>
