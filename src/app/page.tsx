@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { Plus, ArrowLeft, Check } from 'lucide-react'
 
 const setoresOperadores = {
-  "Usinagem": ["Pedro Henrique", "Alex", "Vitor", "Rodrigo", "Vinícius", "Márcio", "Gabriel", "Lucas", "Jadson"],
-  "Produção": ["Sr. Luis", "Luis", "Daniel", "Felipe", "Jadson"],
+  "Usinagem": ["Pedro Henrique", "Alex", "Leandro", "Rodrigo", "Vinícius", "Márcio", "Gabriel", "Lucas", "Jadson"],
+  "Produção": ["Sr. Luis", "Luis", "Pablo", "Felipe", "Jadson"],
   "Manutenção": ["Nilson", "Marcos", "Renato"],
   "Estoque": ["Elias", "Lucas", "Victor", "Rafael"],
   "Expedição": ["Karina", "Deise", "Frank", "Giulia", "Adriano", "Ismael"]

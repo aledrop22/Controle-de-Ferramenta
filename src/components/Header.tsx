@@ -1,7 +1,7 @@
 import React from 'react';
 import { ButtonStyleVariant, AppViewMode } from '../types';
 import { getPrimaryButtonStyle } from '../utils/buttonStyles';
-import { Plus, RefreshCw, Users, Shield, Monitor, Lock } from 'lucide-react';
+import { Plus, Users, Shield, Monitor, Lock } from 'lucide-react';
 
 interface Props {
   buttonStyle: ButtonStyleVariant;
@@ -52,15 +52,6 @@ export const Header: React.FC<Props> = ({
                   <span>Nova Retirada</span>
                   <kbd className="ml-1 px-1.5 py-0.5 text-[10px] bg-black/20 rounded font-mono text-white/80 border border-white/20">N</kbd>
                 </button>
-
-                <button
-                  onClick={onOpenCollaboratorsModal}
-                  title="Ver Lista Completa de Colaboradores"
-                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all duration-150 flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
-                >
-                  <Users className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Colaboradores ({totalOperatorsCount})</span>
-                </button>
               </div>
             )}
 
@@ -96,11 +87,12 @@ export const Header: React.FC<Props> = ({
 
             {viewMode === 'qualidade' && (
               <button
-                onClick={onResetData}
-                title="Restaurar Dados Iniciais"
-                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-all duration-150 shrink-0"
+                onClick={onOpenCollaboratorsModal}
+                title="Ver Lista Completa de Colaboradores"
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all duration-150 flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
+                <Users className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Colaboradores ({totalOperatorsCount})</span>
               </button>
             )}
           </div>
@@ -109,5 +101,3 @@ export const Header: React.FC<Props> = ({
     </header>
   );
 };
-
-
