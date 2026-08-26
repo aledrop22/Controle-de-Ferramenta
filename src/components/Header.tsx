@@ -40,68 +40,69 @@ export const Header: React.FC<Props> = ({
             </h1>
           </div>
 
-          {/* Second row: utility actions */}
-          {viewMode === 'qualidade' && (
-            <div className="flex w-full min-w-0 items-center gap-1.5">
-              <button
-                onClick={onOpenNewWithdrawalModal}
-                className={`flex shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl font-semibold text-sm tracking-wide uppercase transition-all shadow-md whitespace-nowrap ${getPrimaryButtonStyle(buttonStyle)}`}
-              >
-                <Plus className="w-4 h-4" />
-                <span>Nova Retirada</span>
-                <kbd className="ml-1 px-1.5 py-0.5 text-[10px] bg-black/20 rounded font-mono text-white/80 border border-white/20">N</kbd>
-              </button>
-
-              <button
-                onClick={onOpenCollaboratorsModal}
-                title="Ver Lista Completa de Colaboradores"
-                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all duration-150 flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
-              >
-                <Users className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Colaboradores ({totalOperatorsCount})</span>
-              </button>
-
-              {viewMode === 'qualidade' && (
+          {/* Second row: actions and view mode navigation */}
+          <div className="flex w-full min-w-0 items-center justify-between gap-3 overflow-x-auto pb-0.5">
+            {viewMode === 'qualidade' && (
+              <div className="flex shrink-0 items-center gap-1.5">
                 <button
-                  onClick={onResetData}
-                  title="Restaurar Dados Iniciais"
-                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-all duration-150 shrink-0"
+                  onClick={onOpenNewWithdrawalModal}
+                  className={`flex shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl font-semibold text-sm tracking-wide uppercase transition-all shadow-md whitespace-nowrap ${getPrimaryButtonStyle(buttonStyle)}`}
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
+                  <span>Nova Retirada</span>
+                  <kbd className="ml-1 px-1.5 py-0.5 text-[10px] bg-black/20 rounded font-mono text-white/80 border border-white/20">N</kbd>
                 </button>
-              )}
-            </div>
-          )}
 
-          {/* Third row: view mode navigation */}
-          <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 w-full">
-            <button
-              onClick={() => {
-                if (viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl) {
-                  onRequestQualityAccess();
-                } else {
-                  onViewModeChange('qualidade');
-                }
-              }}
-              title={isChaoDeFabricaUrl ? 'Acesso Restrito' : 'Ir para Gestão Qualidade'}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap flex-1 justify-center ${viewMode === 'qualidade'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                }`}
-            >
-              {viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl ? <Lock className="w-3.5 h-3.5 text-rose-400" /> : <Shield className="w-3.5 h-3.5 text-indigo-300" />}
-              <span>Gestão Qualidade</span>
-            </button>
-            <button
-              onClick={() => onViewModeChange('chao-de-fabrica')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap flex-1 justify-center ${viewMode === 'chao-de-fabrica'
-                ? 'bg-amber-600 text-white shadow-md shadow-amber-950'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                }`}
-            >
-              <Monitor className="w-3.5 h-3.5 text-amber-300" />
-              <span>Chão de Fábrica (Tablet)</span>
-            </button>
+                <button
+                  onClick={onOpenCollaboratorsModal}
+                  title="Ver Lista Completa de Colaboradores"
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all duration-150 flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
+                >
+                  <Users className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Colaboradores ({totalOperatorsCount})</span>
+                </button>
+              </div>
+            )}
+
+            <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex shrink-0 items-center gap-1">
+              <button
+                onClick={() => {
+                  if (viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl) {
+                    onRequestQualityAccess();
+                  } else {
+                    onViewModeChange('qualidade');
+                  }
+                }}
+                title={isChaoDeFabricaUrl ? 'Acesso Restrito' : 'Ir para Gestão Qualidade'}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap justify-center ${viewMode === 'qualidade'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+              >
+                {viewMode === 'chao-de-fabrica' || isChaoDeFabricaUrl ? <Lock className="w-3.5 h-3.5 text-rose-400" /> : <Shield className="w-3.5 h-3.5 text-indigo-300" />}
+                <span>Gestão Qualidade</span>
+              </button>
+              <button
+                onClick={() => onViewModeChange('chao-de-fabrica')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap justify-center ${viewMode === 'chao-de-fabrica'
+                  ? 'bg-amber-600 text-white shadow-md shadow-amber-950'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+              >
+                <Monitor className="w-3.5 h-3.5 text-amber-300" />
+                <span>Chão de Fábrica (Tablet)</span>
+              </button>
+            </div>
+
+            {viewMode === 'qualidade' && (
+              <button
+                onClick={onResetData}
+                title="Restaurar Dados Iniciais"
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-all duration-150 shrink-0"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
