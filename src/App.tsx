@@ -115,7 +115,6 @@ export default function App() {
   const buttonStyle: ButtonStyleVariant = 'modern-slate';
 
   // Search & Filters
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [historyFilters, setHistoryFilters] = useState<FilterOptions>({
     period: 'month',
     operator: 'Todos',
@@ -130,11 +129,6 @@ export default function App() {
 
   // Transfer Modal State
   const [transferItem, setTransferItem] = useState<ToolWithdrawal | null>(null);
-
-  // Sync searchQuery into history filters
-  useEffect(() => {
-    setHistoryFilters((prev) => ({ ...prev, search: searchQuery }));
-  }, [searchQuery]);
 
   // Keep local fallback and Supabase synchronized.
   useEffect(() => {
@@ -316,8 +310,6 @@ export default function App() {
         onOpenNewWithdrawalModal={() => setIsModalOpen(true)}
         onOpenCollaboratorsModal={() => setIsCollaboratorsModalOpen(true)}
         onResetData={handleResetData}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
         totalOperatorsCount={operators.length}
       />
 

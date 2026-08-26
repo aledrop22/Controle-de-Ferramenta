@@ -1,7 +1,7 @@
 import React from 'react';
 import { ButtonStyleVariant, AppViewMode } from '../types';
 import { getPrimaryButtonStyle } from '../utils/buttonStyles';
-import { Plus, RefreshCw, Search, Users, Shield, Monitor, Lock } from 'lucide-react';
+import { Plus, RefreshCw, Users, Shield, Monitor, Lock } from 'lucide-react';
 
 interface Props {
   buttonStyle: ButtonStyleVariant;
@@ -12,8 +12,6 @@ interface Props {
   onOpenNewWithdrawalModal: () => void;
   onOpenCollaboratorsModal: () => void;
   onResetData: () => void;
-  searchQuery: string;
-  onSearchChange: (q: string) => void;
   totalOperatorsCount: number;
 }
 
@@ -26,50 +24,33 @@ export const Header: React.FC<Props> = ({
   onOpenNewWithdrawalModal,
   onOpenCollaboratorsModal,
   onResetData,
-  searchQuery,
-  onSearchChange,
   totalOperatorsCount
 }) => {
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-30 shadow-xl">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5">
         <div className="flex flex-col gap-2">
-          {/* First row: brand and primary action */}
-          <div className="flex min-w-0 items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center justify-center gap-2">
-              <div className="w-28 sm:w-32 h-10 flex items-center justify-center overflow-hidden shrink-0">
-                <img src="/assets/logo-mectrol-completo.png" alt="Mectrol" className="w-full h-full object-contain" />
-              </div>
-              <h1 className="shrink-0 whitespace-nowrap text-center text-base sm:text-xl lg:text-xl font-extrabold tracking-tight text-white">
-                Painel de Ferramentas
-              </h1>
+          {/* First row: brand */}
+          <div className="flex min-w-0 items-center justify-center gap-3">
+            <div className="w-32 sm:w-36 h-12 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="/assets/logo-mectrol-completo.png" alt="Mectrol" className="w-full h-full object-contain" />
             </div>
+            <h1 className="shrink-0 whitespace-nowrap text-center text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white">
+              Painel de Ferramentas
+            </h1>
+          </div>
 
-            {viewMode === 'qualidade' && (
+          {/* Second row: utility actions */}
+          {viewMode === 'qualidade' && (
+            <div className="flex w-full min-w-0 items-center gap-1.5">
               <button
                 onClick={onOpenNewWithdrawalModal}
-                className={`flex shrink-0 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl font-semibold text-xs tracking-wide uppercase transition-all shadow-md whitespace-nowrap ${getPrimaryButtonStyle(buttonStyle)}`}
+                className={`flex shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl font-semibold text-sm tracking-wide uppercase transition-all shadow-md whitespace-nowrap ${getPrimaryButtonStyle(buttonStyle)}`}
               >
                 <Plus className="w-4 h-4" />
                 <span>Nova Retirada</span>
                 <kbd className="ml-1 px-1.5 py-0.5 text-[10px] bg-black/20 rounded font-mono text-white/80 border border-white/20">N</kbd>
               </button>
-            )}
-          </div>
-
-          {/* Second row: search and utility actions */}
-          {viewMode === 'qualidade' && (
-            <div className="flex w-full min-w-0 items-center gap-1.5">
-              <div className="relative min-w-0 flex-1">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar operador, ferramenta..."
-                  value={searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full bg-slate-800/90 border border-slate-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                />
-              </div>
 
               <button
                 onClick={onOpenCollaboratorsModal}
@@ -77,7 +58,7 @@ export const Header: React.FC<Props> = ({
                 className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all duration-150 flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
               >
                 <Users className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="hidden sm:inline">Colaboradores ({totalOperatorsCount})</span>
+                <span>Colaboradores ({totalOperatorsCount})</span>
               </button>
 
               {viewMode === 'qualidade' && (
