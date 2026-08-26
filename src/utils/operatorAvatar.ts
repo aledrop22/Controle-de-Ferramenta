@@ -7,7 +7,7 @@ const localAvatarByName: Record<string, string> = {
     jadsonoliveira: 'Jadson_Oliveira.jpg',
     jose: 'Jose.jpg',
     karinadesouza: 'Karina_de_Souza.jpg',
-    leandrosilva: 'Leandro.jpg',
+    leandro: 'Leandro.jpg',
     lucasalves: 'Lucas_Alves.jpg',
     luislaerte: 'Luis_Laerte.jpg',
     marcos: 'Marcos.jpg',

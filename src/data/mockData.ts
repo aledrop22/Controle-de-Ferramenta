@@ -18,8 +18,8 @@ export const INITIAL_OPERATORS: Operator[] = [
   {
     id: 'op-2',
     firstName: 'Leandro',
-    lastName: 'Silva',
-    name: 'Leandro Silva',
+    lastName: '',
+    name: 'Leandro',
     sector: 'Usinagem',
     machine: 'GL 02',
     badge: 'USIN-002',
