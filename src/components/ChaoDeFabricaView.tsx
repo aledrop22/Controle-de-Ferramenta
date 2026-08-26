@@ -11,7 +11,8 @@ import {
   Sparkles,
   Zap,
   RefreshCw,
-  User
+  User,
+  Volume2
 } from 'lucide-react';
 import { defaultAvatarUrl, getOperatorAvatarUrl } from '../utils/operatorAvatar';
 
@@ -56,6 +57,12 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
 
   const shiftDeadline = new Date(currentTime);
   shiftDeadline.setHours(17, 0, 0, 0);
+  const isItemOverdue = (item: ToolWithdrawal) => {
+    if (item.isOvertime) return false;
+    const withdrawalDate = new Date(item.dateRetirada);
+    return withdrawalDate.toDateString() !== currentTime.toDateString()
+      || (currentTime >= shiftDeadline && withdrawalDate <= shiftDeadline);
+  };
   const minutesUntilDeadline = Math.ceil((shiftDeadline.getTime() - currentTime.getTime()) / 60000);
   const isAfterShift = minutesUntilDeadline <= 0;
   const showTimeAlert = pendingReturnCount > 0 && (minutesUntilDeadline <= 20 || isAfterShift);
@@ -76,14 +83,37 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
           ? 'twenty-minutes'
           : 'normal';
 
+  const playAlertSound = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext();
+    }
+
+    const audioContext = audioContextRef.current;
+    const playTone = () => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = isAfterShift ? 880 : 660;
+      gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.22, audioContext.currentTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.35);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.4);
+    };
+
+    if (audioContext.state === 'suspended') {
+      void audioContext.resume().then(playTone);
+      return;
+    }
+
+    playTone();
+  };
+
   useEffect(() => {
     const activateAlerts = () => {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-      }
-      if (audioContextRef.current.state === 'suspended') {
-        void audioContextRef.current.resume();
-      }
+      if (showTimeAlert) playAlertSound();
       if ('Notification' in window && Notification.permission === 'default') {
         void Notification.requestPermission();
       }
@@ -92,7 +122,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
 
     window.addEventListener('pointerdown', activateAlerts);
     return () => window.removeEventListener('pointerdown', activateAlerts);
-  }, []);
+  }, [showTimeAlert]);
 
   useEffect(() => {
     if (!showTimeAlert || alertStage === 'clear' || lastAlertStageRef.current === alertStage) return;
@@ -108,20 +138,7 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
       });
     }
 
-    const audioContext = audioContextRef.current;
-    if (!audioContext) return;
-
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.value = isAfterShift ? 880 : 660;
-    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.22, audioContext.currentTime + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.35);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.4);
+    playAlertSound();
   }, [alertStage, isAfterShift, showTimeAlert, timeAlertMessage]);
 
   useEffect(() => {
@@ -263,7 +280,8 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
           ? 'bg-gradient-to-r from-amber-950/90 via-slate-900 to-amber-950/90 border-amber-500/50'
           : 'bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/80 border-amber-500/30'
         }`}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
           <div className={`p-2.5 rounded-xl border shrink-0 ${showTimeAlert && isAfterShift
             ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
             : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
@@ -285,6 +303,18 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                 : <>Todas as ferramentas devem ser devolvidas antes das 17h. Para permanência em uso após este horário, utilize a prorrogação de <strong>Horas Extras</strong>.</>}
             </p>
           </div>
+          </div>
+          {showTimeAlert && (
+            <button
+              type="button"
+              onClick={playAlertSound}
+              title="Testar som do alerta"
+              className="shrink-0 flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-[11px] font-bold text-amber-200 transition-colors hover:bg-amber-500/20"
+            >
+              <Volume2 className="w-3.5 h-3.5" />
+              <span>Testar som</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -364,11 +394,15 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
         <div className="space-y-4">
           {operatorGroupsList.map((group) => {
             const showMachine = !isGenericMachine(group.sector, group.machine);
+            const overdueItems = group.items.filter(isItemOverdue);
 
             return (
               <div
                 key={group.operatorId || group.operatorName}
-                className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl hover:border-slate-700 transition-all space-y-4"
+                className={`bg-slate-900 border rounded-2xl p-4 sm:p-5 shadow-xl transition-all space-y-4 ${overdueItems.length > 0
+                  ? 'border-rose-500/70 hover:border-rose-400 shadow-rose-950/20'
+                  : 'border-slate-800 hover:border-slate-700'
+                  }`}
               >
                 {/* Operator Header Block */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
@@ -400,6 +434,12 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                         <span className="text-base font-extrabold text-white">
                           👤 {group.operatorName}
                         </span>
+                        {overdueItems.length > 0 && (
+                          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            {overdueItems.length === 1 ? 'Atrasada' : `${overdueItems.length} atrasadas`}
+                          </span>
+                        )}
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
                           ({group.sector})
                         </span>
@@ -409,6 +449,13 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                           </span>
                         )}
                       </div>
+                      {overdueItems.length > 0 && (
+                        <div className="text-[11px] text-rose-300 mt-1 font-semibold">
+                          {overdueItems.length === 1
+                            ? 'Possui uma ferramenta com devolução atrasada.'
+                            : `Possui ${overdueItems.length} ferramentas com devolução atrasada.`}
+                        </div>
+                      )}
                       <div className="text-xs text-slate-400 mt-0.5 font-medium">
                         {group.items.length === 1
                           ? '1 ferramenta em posse'
@@ -425,7 +472,9 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                       key={item.id}
                       className={`bg-slate-950/80 border rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${item.isOvertime
                         ? 'border-emerald-500/40 bg-gradient-to-r from-slate-950 to-emerald-950/20'
-                        : 'border-slate-800/90 hover:border-slate-700'
+                        : isItemOverdue(item)
+                          ? 'border-rose-500/60 bg-gradient-to-r from-slate-950 to-rose-950/20'
+                          : 'border-slate-800/90 hover:border-slate-700'
                         }`}
                     >
                       {/* Left: Index badge + Tool Info */}
@@ -446,6 +495,12 @@ export const ChaoDeFabricaView: React.FC<Props> = ({
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                                 <Clock className="w-3 h-3 text-emerald-400" />
                                 Horas Extras
+                              </span>
+                            )}
+                            {!item.isOvertime && isItemOverdue(item) && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3 text-rose-400" />
+                                Devolução atrasada
                               </span>
                             )}
                           </div>

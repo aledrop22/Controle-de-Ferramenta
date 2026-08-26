@@ -23,7 +23,7 @@ import { ChaoDeFabricaView } from './components/ChaoDeFabricaView';
 import { TransferModal } from './components/TransferModal';
 import { ShieldCheck, Layers } from 'lucide-react';
 import { isSupabaseConfigured } from './lib/supabase';
-import { loadDatabase, saveOperators, saveTools, saveWithdrawals } from './services/database';
+import { loadDatabase, saveOperators, deleteOperator, saveTools, saveWithdrawals } from './services/database';
 
 export default function App() {
   // Check if opened via Tablet URL (?acesso=chao)
@@ -153,6 +153,24 @@ export default function App() {
 
   const handleAddOperator = (newOp: Operator) => {
     setOperators((prev) => [newOp, ...prev]);
+  };
+
+  const handleUpdateOperator = (updatedOperator: Operator) => {
+    setOperators((prev) => prev.map((operator) => operator.id === updatedOperator.id ? updatedOperator : operator));
+    setWithdrawals((prev) => prev.map((withdrawal) => withdrawal.operatorId === updatedOperator.id
+      ? { ...withdrawal, operatorName: updatedOperator.name, sector: updatedOperator.sector, machine: updatedOperator.machine }
+      : withdrawal));
+  };
+
+  const handleDeleteOperator = (operatorId: string) => {
+    const hasActiveWithdrawal = withdrawals.some((withdrawal) => withdrawal.operatorId === operatorId && withdrawal.status === 'active');
+    if (hasActiveWithdrawal) {
+      window.alert('Não é possível remover este colaborador enquanto ele possuir ferramentas retiradas.');
+      return;
+    }
+
+    setOperators((prev) => prev.filter((operator) => operator.id !== operatorId));
+    deleteOperator(operatorId).catch((error) => console.error('Erro ao remover colaborador', error));
   };
 
   // Keyboard shortcut listener ('N' for new withdrawal)
@@ -398,6 +416,8 @@ export default function App() {
         onClose={() => setIsCollaboratorsModalOpen(false)}
         operators={operators}
         onAddOperator={handleAddOperator}
+        onUpdateOperator={handleUpdateOperator}
+        onDeleteOperator={handleDeleteOperator}
       />
 
       {/* Transfer Tool Modal */}

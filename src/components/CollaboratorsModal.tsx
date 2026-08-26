@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Operator } from '../types';
-import { Users, X, Search, Mail, Phone, Building2, Cpu, FileText, BadgeCheck, Plus } from 'lucide-react';
+import { Users, X, Search, Mail, Phone, Building2, Cpu, FileText, BadgeCheck, Plus, Pencil, Trash2, Camera } from 'lucide-react';
 import { defaultAvatarUrl, getOperatorAvatarUrl } from '../utils/operatorAvatar';
 
 interface Props {
@@ -8,19 +8,25 @@ interface Props {
   onClose: () => void;
   operators: Operator[];
   onAddOperator?: (newOp: Operator) => void;
+  onUpdateOperator?: (operator: Operator) => void;
+  onDeleteOperator?: (operatorId: string) => void;
 }
 
 export const CollaboratorsModal: React.FC<Props> = ({
   isOpen,
   onClose,
   operators,
-  onAddOperator
+  onAddOperator,
+  onUpdateOperator,
+  onDeleteOperator
 }) => {
   if (!isOpen) return null;
 
   const [search, setSearch] = useState('');
   const [selectedSector, setSelectedSector] = useState('Todos');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingOperatorId, setEditingOperatorId] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
 
   // New Operator Form state
   const [firstName, setFirstName] = useState('');
@@ -45,35 +51,89 @@ export const CollaboratorsModal: React.FC<Props> = ({
     return matchesSector && matchesSearch;
   });
 
-  const handleCreate = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setFirstName('');
+    setLastName('');
+    setEmail('');
+    setPhone('');
+    setSector('Usinagem');
+    setMachine('CNC 01');
+    setNotes('');
+    setAvatarPreview('');
+    setEditingOperatorId(null);
+  };
+
+  const handleEdit = (operator: Operator) => {
+    setFirstName(operator.firstName);
+    setLastName(operator.lastName);
+    setEmail(operator.email || '');
+    setPhone(operator.phone || '');
+    setSector(operator.sector);
+    setMachine(operator.machine);
+    setNotes(operator.notes || '');
+    setAvatarPreview(operator.avatarUrl || '');
+    setEditingOperatorId(operator.id);
+    setShowAddForm(true);
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(String(reader.result));
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName.trim() || !lastName.trim()) return;
+    if (!firstName.trim()) return;
+
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+    const existingOperator = operators.find((operator) => operator.id === editingOperatorId);
+
+    if (editingOperatorId && existingOperator) {
+      onUpdateOperator?.({
+        ...existingOperator,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        name: fullName,
+        sector,
+        machine: machine || 'Geral',
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+        notes: notes.trim() || undefined,
+        avatarUrl: avatarPreview || undefined
+      });
+      resetForm();
+      setShowAddForm(false);
+      return;
+    }
 
     const newOp: Operator = {
       id: `op-custom-${Date.now()}`,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      name: `${firstName.trim()} ${lastName.trim()}`,
+      name: fullName,
       sector,
       machine: machine || 'Geral',
       badge: `${sector.slice(0, 4).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
       email: email.trim() || undefined,
       phone: phone.trim() || undefined,
       notes: notes.trim() || undefined,
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'
+      avatarUrl: avatarPreview || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'
     };
 
     if (onAddOperator) {
       onAddOperator(newOp);
     }
 
-    // Reset Form
-    setFirstName('');
-    setLastName('');
-    setEmail('');
-    setPhone('');
-    setNotes('');
+    resetForm();
     setShowAddForm(false);
+  };
+
+  const handleDelete = (operator: Operator) => {
+    if (!window.confirm(`Deseja remover o colaborador ${operator.name}?`)) return;
+    onDeleteOperator?.(operator.id);
   };
 
   return (
@@ -119,9 +179,9 @@ export const CollaboratorsModal: React.FC<Props> = ({
 
         {/* Form to Add New Collaborator */}
         {showAddForm ? (
-          <form onSubmit={handleCreate} className="p-6 overflow-y-auto space-y-4">
+          <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4">
             <h4 className="text-sm font-bold text-white mb-2 pb-2 border-b border-slate-800">
-              Cadastrar Novo Colaborador
+              {editingOperatorId ? 'Editar Colaborador' : 'Cadastrar Novo Colaborador'}
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -138,10 +198,9 @@ export const CollaboratorsModal: React.FC<Props> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Last Name (Sobrenome)</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Last Name (Sobrenome, opcional)</label>
                 <input
                   type="text"
-                  required
                   placeholder="Ex: Eduardo"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
@@ -197,6 +256,21 @@ export const CollaboratorsModal: React.FC<Props> = ({
             </div>
 
             <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">Foto do colaborador</label>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                  {avatarPreview ? <img src={avatarPreview} alt="Pré-visualização" className="w-full h-full object-cover" /> : <Camera className="w-5 h-5 text-slate-500" />}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">Notes (Observações Técnicas)</label>
               <textarea
                 rows={3}
@@ -210,7 +284,7 @@ export const CollaboratorsModal: React.FC<Props> = ({
             <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
               <button
                 type="button"
-                onClick={() => setShowAddForm(false)}
+                onClick={() => { resetForm(); setShowAddForm(false); }}
                 className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold"
               >
                 Cancelar
@@ -219,7 +293,7 @@ export const CollaboratorsModal: React.FC<Props> = ({
                 type="submit"
                 className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
               >
-                Salvar Colaborador
+                {editingOperatorId ? 'Salvar Alterações' : 'Salvar Colaborador'}
               </button>
             </div>
           </form>
@@ -262,7 +336,11 @@ export const CollaboratorsModal: React.FC<Props> = ({
               {filteredOperators.map((op) => (
                 <div
                   key={op.id}
-                  className="bg-slate-800/50 border border-slate-700/60 rounded-xl p-4 transition-all hover:border-slate-600 flex items-start gap-3.5"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleEdit(op)}
+                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') handleEdit(op); }}
+                  className="bg-slate-800/50 border border-slate-700/60 rounded-xl p-4 transition-all hover:border-indigo-500/60 cursor-pointer flex items-start gap-3.5"
                 >
                   <img
                     src={getOperatorAvatarUrl(op.id, op.name)}
@@ -276,12 +354,32 @@ export const CollaboratorsModal: React.FC<Props> = ({
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <h4 className="font-bold text-sm text-white truncate">
-                        {op.name}
-                      </h4>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shrink-0">
-                        {op.badge}
-                      </span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <h4 className="font-bold text-sm text-white truncate">{op.name}</h4>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shrink-0">
+                          {op.badge}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(event) => { event.stopPropagation(); handleEdit(op); }}
+                          title="Editar colaborador"
+                          aria-label={`Editar ${op.name}`}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-indigo-600 transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => { event.stopPropagation(); handleDelete(op); }}
+                          title="Remover colaborador"
+                          aria-label={`Remover ${op.name}`}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-rose-600 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Sector & Machine */}

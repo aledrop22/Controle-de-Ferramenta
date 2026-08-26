@@ -41,6 +41,12 @@ export async function saveOperators(operators: Operator[]) {
     if (error) throw error;
 }
 
+export async function deleteOperator(operatorId: string) {
+    if (!supabase) return;
+    const { error } = await supabase.from('operators').delete().eq('id', operatorId);
+    if (error) throw error;
+}
+
 export async function saveWithdrawals(withdrawals: ToolWithdrawal[]) {
     if (!supabase) return;
     const { error } = await supabase.from('withdrawals').upsert(withdrawals.map(mapWithdrawalToRow));
