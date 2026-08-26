@@ -457,13 +457,13 @@ export const ESTOQUE_CATEGORIES: Record<string, string[]> = {
     'M60 x 1,5', 'M60 x 2,0', 'M65 x 2', 'M66 x 2,0', 'M85 x 2,0'
   ],
   'Micrômetro': [
-    'Micrômetro Interno', 'Micrômetro Externo', '0 - 25mm', '25 - 50mm', '50 - 75mm', '75 - 100mm', '100 - 125mm',
+    'Micrômetro Externo', '0 - 25mm', '25 - 50mm', '50 - 75mm', '75 - 100mm', '100 - 125mm',
     '125 - 150mm', '150 - 175mm', '175 - 200mm', '200 - 225mm',
     '225 - 250mm', '250 - 275mm', '275 - 300mm', '0 - 1"', '1 - 2"'
   ],
   'Súbito': ['6 - 10mm', '10 - 18mm', '18 - 35mm', '35 - 50mm', '50 - 160mm'],
   'Relógio Comparador': ['Relógio 1 (0.01mm)', 'Relógio 2 Centesimal', 'Relógio 3 Digital'],
-  'Paquímetro Digital': ['Modelo Digital 0-150mm', 'Modelo Digital 0-200mm', 'Modelo Digital 0-300mm'],
+  'Paquímetro': ['Paquímetro Digital 01', 'Paquímetro 300 mm'],
   'Ferramentas Diversas': [
     'Martelo Antirretorno 500g', 'Alicate de Pressão', 'Alicate Universal',
     'Chave de Fenda Kit', 'Chave Allen Jogo', 'Torquímetro Digital 10-100Nm'
