@@ -89,14 +89,8 @@ export const NewWithdrawalModal: React.FC<Props> = ({
 
   const handleSectorTabChange = (sec: string) => {
     setActiveSectorTab(sec);
-    if (sec !== 'Todos') {
-      const firstInSec = operators.find((o) => o.sector.toLowerCase() === sec.toLowerCase());
-      if (firstInSec) {
-        setSelectedOperatorId(firstInSec.id);
-        setSelectedSector(firstInSec.sector);
-        setMachineInput(firstInSec.machine || (firstInSec.sector === 'Usinagem' ? 'GL 01' : firstInSec.sector));
-      }
-    }
+    // Don't auto-select operator when changing sector tabs
+    // User should manually select operator after choosing sector
   };
 
   // Toggle tool item in batch
