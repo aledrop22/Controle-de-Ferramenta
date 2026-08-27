@@ -56,10 +56,9 @@ export const NewWithdrawalModal: React.FC<Props> = ({
   if (!isOpen) return null;
 
   // Selected Operator State
-  const defaultOp = operators[0];
-  const [selectedOperatorId, setSelectedOperatorId] = useState<string>(defaultOp?.id || '');
-  const [selectedSector, setSelectedSector] = useState<string>(defaultOp?.sector || 'Usinagem');
-  const [machineInput, setMachineInput] = useState<string>(defaultOp?.machine || 'GL 01');
+  const [selectedOperatorId, setSelectedOperatorId] = useState<string>('');
+  const [selectedSector, setSelectedSector] = useState<string>('');
+  const [machineInput, setMachineInput] = useState<string>('');
   const [activeSectorTab, setActiveSectorTab] = useState<string>('Usinagem');
 
   // Tool Category & Batch Selection State
@@ -147,6 +146,13 @@ export const NewWithdrawalModal: React.FC<Props> = ({
     e.preventDefault();
     setErrorMsg('');
 
+    // Validate operator selection
+    if (!selectedOperatorId) {
+      setErrorMsg('Por favor, selecione o nome do colaborador responsável pela retirada.');
+      return;
+    }
+
+    // Validate tool selection
     if (selectedBatch.length === 0) {
       setErrorMsg('Por favor, selecione ao menos uma ferramenta ou medida para registrar a retirada.');
       return;
@@ -170,7 +176,7 @@ export const NewWithdrawalModal: React.FC<Props> = ({
     onClose();
   };
 
-  const currentOp = operators.find((o) => o.id === selectedOperatorId) || defaultOp;
+  const currentOp = operators.find((o) => o.id === selectedOperatorId);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
@@ -368,22 +374,34 @@ export const NewWithdrawalModal: React.FC<Props> = ({
             )}
 
             {/* Badge de Vinculação Ativa */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-indigo-950/40 border border-indigo-500/20 text-xs">
+            <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border text-xs ${
+              currentOp 
+                ? 'bg-indigo-950/40 border-indigo-500/20' 
+                : 'bg-rose-950/30 border-rose-500/30'
+            }`}>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-indigo-200 font-medium">Destino da Retirada:</span>
-                <span className="text-white font-bold">{currentOp?.name}</span>
+                <span className={`w-2 h-2 rounded-full ${currentOp ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}></span>
+                <span className={`font-medium ${currentOp ? 'text-indigo-200' : 'text-rose-300'}`}>
+                  Destino da Retirada:
+                </span>
+                <span className={`font-bold ${currentOp ? 'text-white' : 'text-rose-400'}`}>
+                  {currentOp?.name || 'Nenhum colaborador selecionado'}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-white font-semibold">
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  <Building2 className="w-3 h-3" />
-                  Setor: {selectedSector}
-                </span>
-                {selectedSector === 'Usinagem' && machineInput && (
-                  <span className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                    <Cpu className="w-3 h-3" />
-                    Máquina: {machineInput}
-                  </span>
+                {currentOp && (
+                  <>
+                    <span className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      <Building2 className="w-3 h-3" />
+                      Setor: {selectedSector}
+                    </span>
+                    {selectedSector === 'Usinagem' && machineInput && (
+                      <span className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                        <Cpu className="w-3 h-3" />
+                        Máquina: {machineInput}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -475,7 +493,7 @@ export const NewWithdrawalModal: React.FC<Props> = ({
                 <div className="pt-2 border-t border-slate-800 flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder="Digite o nome de outra ferramenta... (Ex: Martelo, Alicate, Chave)"
+                    placeholder="Digite o nome de outra ferramenta... (Ex: Martelo, Alicate, Chave) *"
                     value={customToolInput}
                     onChange={(e) => setCustomToolInput(e.target.value)}
                     className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
@@ -483,7 +501,12 @@ export const NewWithdrawalModal: React.FC<Props> = ({
                   <button
                     type="button"
                     onClick={handleAddCustomTool}
-                    className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1 shrink-0"
+                    disabled={!customToolInput.trim()}
+                    className={`px-3 py-1.5 rounded-lg text-white text-xs font-semibold flex items-center gap-1 shrink-0 ${
+                      !customToolInput.trim()
+                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                        : 'bg-rose-600 hover:bg-rose-500'
+                    }`}
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Adicionar</span>
@@ -571,9 +594,9 @@ export const NewWithdrawalModal: React.FC<Props> = ({
 
               <button
                 type="submit"
-                disabled={selectedBatch.length === 0}
+                disabled={!selectedOperatorId || selectedBatch.length === 0}
                 className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${
-                  selectedBatch.length === 0
+                  !selectedOperatorId || selectedBatch.length === 0
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                     : getPrimaryButtonStyle(buttonStyle)
                 }`}
