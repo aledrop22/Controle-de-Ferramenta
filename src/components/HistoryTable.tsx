@@ -28,7 +28,7 @@ export const HistoryTable: React.FC<Props> = ({
     if (filters.period === '7days') {
       const diffDays = (Date.now() - new Date(item.dateRetirada).getTime()) / (1000 * 60 * 60 * 24);
       if (diffDays > 7) return false;
-    } else if (filters.period === '30days') {
+    } else if (filters.period === 'month') {
       const diffDays = (Date.now() - new Date(item.dateRetirada).getTime()) / (1000 * 60 * 60 * 24);
       if (diffDays > 30) return false;
     }

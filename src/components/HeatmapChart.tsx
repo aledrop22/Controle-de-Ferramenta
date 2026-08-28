@@ -27,6 +27,9 @@ export const HeatmapChart: React.FC<Props> = ({ withdrawals, operators, sectors 
     if (selectedPeriod === '7days') {
       const diffDays = (Date.now() - new Date(item.dateRetirada).getTime()) / (1000 * 60 * 60 * 24);
       if (diffDays > 7) return;
+    } else if (selectedPeriod === 'month') {
+      const diffDays = (Date.now() - new Date(item.dateRetirada).getTime()) / (1000 * 60 * 60 * 24);
+      if (diffDays > 30) return;
     }
 
     if (matrix[item.operatorName] && matrix[item.operatorName][item.sector] !== undefined) {
