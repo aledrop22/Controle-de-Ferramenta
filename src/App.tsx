@@ -407,6 +407,7 @@ export default function App() {
         tools={tools}
         sectors={sectors}
         buttonStyle={buttonStyle}
+        withdrawals={withdrawals}
         onSubmit={handleCreateWithdrawal}
       />
 

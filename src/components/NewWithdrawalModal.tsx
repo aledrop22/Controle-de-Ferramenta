@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Operator, ToolItem, ButtonStyleVariant } from '../types';
+import { Operator, ToolItem, ButtonStyleVariant, ToolWithdrawal } from '../types';
 import { ESTOQUE_CATEGORIES, USINAGEM_MACHINES } from '../data/mockData';
 import { getPrimaryButtonStyle } from '../utils/buttonStyles';
 import {
@@ -33,6 +33,7 @@ interface Props {
   tools: ToolItem[];
   sectors: string[];
   buttonStyle: ButtonStyleVariant;
+  withdrawals: ToolWithdrawal[];
   onSubmit: (withdrawals: Array<{
     toolId: string;
     operatorId: string;
@@ -51,6 +52,7 @@ export const NewWithdrawalModal: React.FC<Props> = ({
   operators,
   sectors,
   buttonStyle,
+  withdrawals,
   onSubmit
 }) => {
   if (!isOpen) return null;
@@ -70,6 +72,21 @@ export const NewWithdrawalModal: React.FC<Props> = ({
   const [customToolInput, setCustomToolInput] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
+
+  // Check if a tool is currently in use
+  const isToolInUse = (category: string, spec: string): boolean => {
+    return withdrawals.some(
+      (w) => w.status === 'active' && w.toolName === category && w.spec === spec
+    );
+  };
+
+  // Get the operator who is currently using a tool
+  const getToolUser = (category: string, spec: string): string | null => {
+    const activeWithdrawal = withdrawals.find(
+      (w) => w.status === 'active' && w.toolName === category && w.spec === spec
+    );
+    return activeWithdrawal ? activeWithdrawal.operatorName : null;
+  };
 
   // Auto-fill sector and machine when operator changes
   useEffect(() => {
@@ -98,6 +115,13 @@ export const NewWithdrawalModal: React.FC<Props> = ({
     const itemKey = `${category}::${spec}`;
     const exists = selectedBatch.some((b) => `${b.category}::${b.spec}` === itemKey);
 
+    // Check if tool is already in use by someone else
+    if (!exists && isToolInUse(category, spec)) {
+      const toolUser = getToolUser(category, spec);
+      setErrorMsg(`Esta ferramenta já está em uso por ${toolUser}. Não é possível retirar a mesma ferramenta.`);
+      return;
+    }
+
     if (exists) {
       setSelectedBatch((prev) => prev.filter((b) => `${b.category}::${b.spec}` !== itemKey));
     } else {
@@ -117,6 +141,13 @@ export const NewWithdrawalModal: React.FC<Props> = ({
     if (!customToolInput.trim()) return;
     const spec = customToolInput.trim();
     const itemKey = `Ferramentas Diversas::${spec}`;
+
+    // Check if tool is already in use by someone else
+    if (isToolInUse('Ferramentas Diversas', spec)) {
+      const toolUser = getToolUser('Ferramentas Diversas', spec);
+      setErrorMsg(`Esta ferramenta já está em uso por ${toolUser}. Não é possível retirar a mesma ferramenta.`);
+      return;
+    }
 
     if (!selectedBatch.some((b) => `${b.category}::${b.spec}` === itemKey)) {
       setSelectedBatch((prev) => [
@@ -459,20 +490,30 @@ export const NewWithdrawalModal: React.FC<Props> = ({
                 {ESTOQUE_CATEGORIES[activeCategory]?.map((spec) => {
                   const itemKey = `${activeCategory}::${spec}`;
                   const isSelected = selectedBatch.some((b) => `${b.category}::${b.spec}` === itemKey);
+                  const isInUse = isToolInUse(activeCategory, spec);
+                  const toolUser = getToolUser(activeCategory, spec);
 
                   return (
                     <button
                       type="button"
                       key={spec}
                       onClick={() => handleToggleToolItem(activeCategory, spec)}
+                      disabled={isInUse}
                       className={`px-2.5 py-2 rounded-lg text-xs font-mono font-medium transition-all text-left flex items-center justify-between border ${
-                        isSelected
+                        isInUse
+                          ? 'bg-rose-950/30 text-rose-400 border-rose-500/60 cursor-not-allowed opacity-70'
+                          : isSelected
                           ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/80 ring-1 ring-emerald-500/30'
                           : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
                       }`}
                     >
                       <span className="truncate">{spec}</span>
-                      {isSelected ? (
+                      {isInUse ? (
+                        <div className="flex items-center gap-1 shrink-0 ml-1">
+                          <AlertCircle className="w-3 h-3 text-rose-400" />
+                          <span className="text-[10px] font-bold text-rose-400">Em uso</span>
+                        </div>
+                      ) : isSelected ? (
                         <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-1" />
                       ) : (
                         <Plus className="w-3 h-3 text-slate-500 shrink-0 ml-1 opacity-0 hover:opacity-100" />
