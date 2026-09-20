@@ -457,7 +457,7 @@ export const ESTOQUE_CATEGORIES: Record<string, string[]> = {
     'M60 x 1,5', 'M60 x 2,0', 'M65 x 2', 'M66 x 2,0', 'M85 x 2,0'
   ],
   'Micrômetro': [
-    'Micrômetro Interno', '0 - 25mm', '25 - 50mm', '50 - 75mm', '75 - 100mm', '100 - 125mm',
+    'Micrômetro Interno 5-30mm', '0 - 25mm', '25 - 50mm', '50 - 75mm', '75 - 100mm', '100 - 125mm',
     '125 - 150mm', '150 - 175mm', '175 - 200mm', '200 - 225mm',
     '225 - 250mm', '250 - 275mm', '275 - 300mm', '0 - 1"', '1 - 2"'
   ],
